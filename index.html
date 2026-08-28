@@ -334,7 +334,7 @@
         }
 
         .btn-export:hover {
-            background-color: #9d6b76;
+            background-color: var(--primary-dark);
         }
 
         /* Catalog Grid & Media Display */
@@ -558,7 +558,7 @@
         }
 
         .btn-comment:hover {
-            background-color: #9d6b76;
+            background-color: var(--primary-dark);
         }
 
         /* Admin Quick Price & Name Edit Box inside Card */
@@ -611,7 +611,7 @@
         }
 
         .btn-save-inline-price:hover {
-            background-color: #9d6b76;
+            background-color: var(--primary-dark);
         }
 
         .btn-cart {
@@ -628,7 +628,7 @@
         }
 
         .btn-cart:hover {
-            background-color: #9d6b76;
+            background-color: var(--primary-dark);
         }
 
         .btn-delete-item {
@@ -878,6 +878,12 @@
             </form>
         </div>
 
+        <div id="admin-panel-duplicates" class="admin-panel" style="border-left-color: #d9534f;">
+            <h3>🧹 Admin Panel: Duplicate & Clean-up Filter</h3>
+            <p style="font-size: 13px; color: #666; margin-top:0;">Scan and instantly purge corrupted, accidental duplicate items, or orphaned records from Firebase.</p>
+            <button type="button" class="btn-export" style="background-color: #d9534f;" onclick="scanAndPurgeDuplicates()">🔍 Scan & Clean Duplicates Now</button>
+        </div>
+
         <div id="admin-panel-users" class="admin-panel">
             <h3>👥 Admin Panel: Registered Visitors List</h3>
             <p style="font-size: 13px; color: #666; margin-top:0;">View all visitors who registered upon visiting the website.</p>
@@ -979,7 +985,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, setDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, setDoc, onSnapshot, deleteDoc, doc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA5JeXosMT6e5xYcDTJNdPKPjKF5tRcf5Y",
@@ -1053,17 +1059,15 @@
             return (baseVnd * VND_TO_PHP_RATIO) + ADMIN_MARKUP;
         }
 
-        // Helper to safely extract or normalize VND price from older or mismatched records
         function getNormalizedVnd(gown) {
             if (gown.priceVnd !== undefined && gown.priceVnd !== null && !isNaN(gown.priceVnd)) {
                 return parseFloat(gown.priceVnd);
             }
             if (gown.price !== undefined && gown.price !== null && !isNaN(gown.price)) {
-                // Backward compatibility: If an old record stored a PHP price, reverse-engineer it back to VND approximation
                 const rawPhp = parseFloat(gown.price);
                 return Math.max(0, (rawPhp - ADMIN_MARKUP) / VND_TO_PHP_RATIO);
             }
-            return 500000; // default fallback VND
+            return 500000;
         }
 
         function getRegisteredUsers() {
@@ -1263,7 +1267,7 @@
         }
 
         function activateAdminMode() {
-            const panels = ['admin-panel-metrics', 'admin-panel-catalog', 'admin-panel-users', 'admin-panel-contact'];
+            const panels = ['admin-panel-metrics', 'admin-panel-catalog', 'admin-panel-duplicates', 'admin-panel-users', 'admin-panel-contact'];
             panels.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('active');
@@ -1277,7 +1281,7 @@
         }
 
         window.toggleAdminPanel = function() {
-            const panels = ['admin-panel-metrics', 'admin-panel-catalog', 'admin-panel-users', 'admin-panel-contact'];
+            const panels = ['admin-panel-metrics', 'admin-panel-catalog', 'admin-panel-duplicates', 'admin-panel-users', 'admin-panel-contact'];
             const firstPanel = document.getElementById('admin-panel-catalog');
             const isActive = firstPanel ? firstPanel.classList.contains('active') : false;
             
@@ -1294,6 +1298,33 @@
             if (!isActive) {
                 renderRegisteredUsers();
                 updateLaunchMetrics();
+            }
+        }
+
+        // Automatic and Manual Duplicate / Orphan Filter Scanner
+        window.scanAndPurgeDuplicates = async function() {
+            if (!confirm("Admin: Run duplicate item and corruption scan? This will clean up stray documents and synchronize IDs.")) return;
+            try {
+                const querySnapshot = await getDocs(collection(db, "gowns_catalog"));
+                let seenIds = new Set();
+                let purgedCount = 0;
+
+                for (const documentSnapshot of querySnapshot.docs) {
+                    const docId = documentSnapshot.id;
+                    const data = documentSnapshot.data();
+
+                    // Check if record is corrupt/unnamed or an accidental duplicate key
+                    if (!data || !data.name || data.name === "undefined" || seenIds.has(docId)) {
+                        await deleteDoc(doc(db, "gowns_catalog", docId));
+                        purgedCount++;
+                    } else {
+                        seenIds.add(docId);
+                    }
+                }
+                alert(`Scan complete! Successfully purged ${purgedCount} corrupt or duplicate records.`);
+            } catch (err) {
+                console.error("Error purging duplicates:", err);
+                alert("Failed to complete scan. Check console log.");
             }
         }
 
@@ -1342,7 +1373,15 @@
             if (!grid) return;
             
             let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
-            gowns = gowns.filter(g => g && g.id && g.name && g.name !== "undefined");
+            
+            // Strictly filter out any invalid/unnamed or duplicate ID items in memory view
+            let uniqueMap = new Map();
+            gowns.forEach(g => {
+                if (g && g.id && g.name && g.name !== "undefined") {
+                    uniqueMap.set(g.id, g);
+                }
+            });
+            gowns = Array.from(uniqueMap.values());
 
             const currentUser = JSON.parse(localStorage.getItem('sf_logged_user'));
 
@@ -1681,7 +1720,6 @@
                 return;
             }
 
-            // Update local state cleanly
             let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const gown = gowns.find(g => String(g.id) === String(id));
             if (gown) {
@@ -1693,7 +1731,6 @@
             alert(`Item ${id} successfully updated!`);
 
             try {
-                // Strictly target existing document ID without creating duplicates
                 const gownRef = doc(db, "gowns_catalog", String(id));
                 await updateDoc(gownRef, { 
                     name: newName, 
@@ -1791,3 +1828,21 @@
                 console.warn("Firestore snapshot offline fallback active. Loading default catalog.", error);
                 if (liveGownsCatalog.length === 0) {
                     liveGownsCatalog = defaultGowns;
+                    renderCatalog();
+                }
+            });
+        }
+
+        checkVisitorSession();
+        initRealtimeCatalog();
+        
+        if (liveGownsCatalog.length === 0) {
+            liveGownsCatalog = defaultGowns;
+            renderCatalog();
+        }
+
+        renderCart();
+        loadContactInfo();
+    </script>
+</body>
+</html>
