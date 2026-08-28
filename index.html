@@ -395,6 +395,57 @@
             margin-bottom: 15px;
         }
 
+        /* Admin Quick Price Edit Box inside Card */
+        .admin-price-box {
+            display: none;
+            background: #fdf6f6;
+            border: 1px dashed var(--primary);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .admin-mode .admin-price-box {
+            display: block;
+        }
+
+        .admin-price-box label {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .admin-price-input-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .admin-price-input-group input {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .btn-save-inline-price {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save-inline-price:hover {
+            background-color: #9d6b76;
+        }
+
         .btn-cart {
             background-color: var(--primary);
             color: white;
@@ -411,43 +462,27 @@
             background-color: #9d6b76;
         }
 
-        .admin-actions {
-            display: none;
-            margin-top: 10px;
-            gap: 5px;
-        }
-
-        .admin-mode .admin-actions {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .btn-update-price {
-            background-color: #555;
-            color: white;
-            border: none;
-            padding: 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        .btn-update-price:hover {
-            background-color: #333;
-        }
-
         .btn-delete-item {
-            background-color: #dc3545;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(220, 53, 69, 0.9);
             color: white;
             border: none;
-            padding: 6px;
-            border-radius: 4px;
-            font-size: 12px;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
             cursor: pointer;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
         }
 
-        .btn-delete-item:hover {
-            background-color: #bd2130;
+        .admin-mode .btn-delete-item {
+            display: flex;
         }
 
         /* Cart & Checkout Section */
@@ -1020,6 +1055,7 @@
 
                 return `
                     <div class="card" id="card-${gown.id}">
+                        <button class="btn-delete-item" onclick="deleteGown('${gown.id}')" title="Delete item">×</button>
                         <div class="carousel-container" data-index="0" data-total="${totalSlides}">
                             <div class="carousel-track" id="track-${gown.id}">
                                 ${mediaHtml}
@@ -1030,11 +1066,17 @@
                             <h3>${gown.name}</h3>
                             <p>${gown.desc}</p>
                             <div class="price">₱${parseFloat(gown.price).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
-                            <button class="btn-cart" onclick="addToCart('${gown.id}')">Add to Cart 🛍️</button>
-                            <div class="admin-actions">
-                                <button class="btn-update-price" onclick="updateGownPrice('${gown.id}', '${gown.name}', '${gown.price}')">✏️ Update Price (PHP)</button>
-                                <button class="btn-delete-item" onclick="deleteGown('${gown.id}')">🗑️ Delete Item</button>
+                            
+                            <!-- Inline Admin Price Edit Box -->
+                            <div class="admin-price-box">
+                                <label>Edit Price (PHP):</label>
+                                <div class="admin-price-input-group">
+                                    <input type="number" id="price-input-${gown.id}" value="${gown.price}" step="0.01">
+                                    <button class="btn-save-inline-price" onclick="saveInlinePrice('${gown.id}')">Save</button>
+                                </div>
                             </div>
+
+                            <button class="btn-cart" onclick="addToCart('${gown.id}')">Add to Cart 🛍️</button>
                         </div>
                     </div>
                 `;
@@ -1315,18 +1357,24 @@
             }
         }
 
-        window.updateGownPrice = async function(id, name, currentPrice) {
-            const newPrice = prompt(`Enter new price in PHP for "${name}":`, currentPrice);
-            if (newPrice !== null && !isNaN(newPrice) && newPrice.trim() !== "") {
-                const formattedPrice = parseFloat(newPrice).toFixed(2);
-                try {
-                    const gownRef = doc(db, "gowns_catalog", id);
-                    await updateDoc(gownRef, { price: formattedPrice });
-                    alert(`Price updated successfully to ₱${formattedPrice}!`);
-                } catch (e) {
-                    console.error("Error updating price: ", e);
-                    alert("Failed to update price in database.");
-                }
+        window.saveInlinePrice = async function(id) {
+            const inputField = document.getElementById(`price-input-${id}`);
+            if (!inputField) return;
+            const newPriceValue = parseFloat(inputField.value);
+
+            if (isNaN(newPriceValue) || newPriceValue < 0) {
+                alert("Please enter a valid price amount.");
+                return;
+            }
+
+            const formattedPrice = newPriceValue.toFixed(2);
+            try {
+                const gownRef = doc(db, "gowns_catalog", id);
+                await updateDoc(gownRef, { price: formattedPrice });
+                alert(`Price successfully updated to ₱${formattedPrice}!`);
+            } catch (e) {
+                console.error("Error updating price in Firebase: ", e);
+                alert("Failed to update price. Check console.");
             }
         }
 
@@ -1369,7 +1417,7 @@
                 status: 'Pending'
             };
 
-        let inquiries = getInquiries();
+            let inquiries = getInquiries();
             inquiries.unshift(newOrder);
             localStorage.setItem('sf_inquiries_tracker', JSON.stringify(inquiries));
             renderTracker();
