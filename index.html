@@ -1751,22 +1751,37 @@
 
             let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const gown = gowns.find(g => String(g.id) === String(id));
-            if (gown) {
-                gown.name = newName;
-                gown.priceVnd = newVnd;
-                renderCatalog();
-            }
+            if (!gown) return;
+
+            // Preserve existing images and metadata so they are never wiped or broken when updating price/name
+            gown.name = newName;
+            gown.priceVnd = newVnd;
+            renderCatalog();
 
             alert(`Item ${id} successfully updated!`);
 
             try {
                 const gownRef = doc(db, "gowns_catalog", String(id));
-                await setDoc(gownRef, { 
+                await updateDoc(gownRef, { 
                     name: newName, 
                     priceVnd: newVnd 
-                }, { merge: true });
+                });
             } catch (e) {
-                console.warn("Cloud sync update warning: ", e);
+                console.warn("Cloud sync update warning, attempting fallback setDoc: ", e);
+                try {
+                    const gownRef = doc(db, "gowns_catalog", String(id));
+                    await setDoc(gownRef, {
+                        name: newName,
+                        priceVnd: newVnd,
+                        desc: gown.desc || "",
+                        images: gown.images || [],
+                        video: gown.video || "",
+                        likes: gown.likes || [],
+                        comments: gown.comments || []
+                    }, { merge: true });
+                } catch (err2) {
+                    console.error("Fallback update failed:", err2);
+                }
             }
         };
 
