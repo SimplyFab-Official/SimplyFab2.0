@@ -281,7 +281,7 @@
 
         .admin-form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 120px;
             gap: 15px;
             align-items: flex-end;
         }
@@ -838,31 +838,31 @@
         </div>
 
         <div id="admin-panel-catalog" class="admin-panel">
-            <h3>⚙️ Admin Panel: Add New Dress Item (Price in VND + ₱700 Automatic Markup)</h3>
+            <h3>⚙️ Admin Panel: Add or Fill Missing Item Number (e.g. ITEM-0002)</h3>
             <form id="add-gown-form">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
-                        <label for="new-name">Dress Name / Label:</label>
-                        <input type="text" id="new-name" class="form-control" placeholder="e.g., The Aria Ballgown" required>
+                        <label for="new-custom-id">Item ID Number:</label>
+                        <input type="text" id="new-custom-id" class="form-control" placeholder="e.g. ITEM-0002" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-name">Dress Name:</label>
+                        <input type="text" id="new-name" class="form-control" placeholder="Dress Label" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-desc">Description:</label>
                         <input type="text" id="new-desc" class="form-control" placeholder="Short description" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label for="new-price-vnd">Price in VND (₫):</label>
-                        <input type="number" id="new-price-vnd" class="form-control" placeholder="e.g., 800000" step="1" required>
-                        <small style="color: var(--primary); font-size: 11px; font-weight: bold;" id="vnd-conversion-preview">User Price: ₱0.00 PHP (Incl. +₱700 markup)</small>
+                        <label for="new-price-vnd">Price VND (₫):</label>
+                        <input type="number" id="new-price-vnd" class="form-control" placeholder="800000" step="1" required>
+                        <small style="color: var(--primary); font-size: 10px; font-weight: bold;" id="vnd-conversion-preview">₱0.00 PHP</small>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label for="new-imgs">Upload Pictures (3+):</label>
-                        <input type="file" id="new-imgs" class="form-control" accept="image/*" multiple required style="padding: 6px;">
+                        <label for="new-imgs">Pictures (3+):</label>
+                        <input type="file" id="new-imgs" class="form-control" accept="image/*" multiple required style="padding: 4px;">
                     </div>
-                    <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
-                        <label for="new-video">Upload Product Video (Optional):</label>
-                        <input type="file" id="new-video" class="form-control" accept="video/*" style="padding: 6px;">
-                    </div>
-                    <button type="submit" class="btn-submit" style="margin-top:0; height: 40px; background-color: var(--primary);">Publish Dress</button>
+                    <button type="submit" class="btn-submit" style="margin-top:0; height: 40px; background-color: var(--primary);">Save Item</button>
                 </div>
             </form>
         </div>
@@ -870,7 +870,7 @@
         <!-- Admin Duplicate Clean-up Panel -->
         <div id="admin-panel-duplicates" class="admin-panel" style="border-left-color: #d9534f;">
             <h3>🧹 Admin Panel: Duplicate & Clean-up Filter</h3>
-            <p style="font-size: 13px; color: #666; margin-top:0;">Scan and instantly purge corrupted, accidental duplicate items, or orphaned records from Firebase/Storage.</p>
+            <p style="font-size: 13px; color: #666; margin-top:0;">Scan and instantly purge corrupted, accidental duplicate items, or orphaned records.</p>
             <button type="button" id="purge-duplicates-btn" class="btn-export" style="background-color: #d9534f;">🔍 Scan & Clean Duplicates Now</button>
         </div>
 
@@ -1007,7 +1007,7 @@
 
         const defaultGowns = [
             {
-                id: "ITEM-001",
+                id: "ITEM-0001",
                 name: "The Aria Ballgown",
                 desc: "Elegant princess-cut ballgown with crystal embellishments.",
                 priceVnd: 720000,
@@ -1021,7 +1021,7 @@
                 comments: []
             },
             {
-                id: "ITEM-002",
+                id: "ITEM-0002",
                 name: "Velvet Evening Silhouette",
                 desc: "Sleek, form-fitting evening dress designed for gala events.",
                 priceVnd: 600000,
@@ -1035,7 +1035,7 @@
                 comments: []
             },
             {
-                id: "ITEM-003",
+                id: "ITEM-0003",
                 name: "Royal Lace Modern Terno",
                 desc: "Traditional yet modern filipiniana aesthetic for formal occasions.",
                 priceVnd: 920000,
@@ -1213,7 +1213,7 @@
             const phpValue = calculatePhpPrice(vndInput);
             const previewEl = document.getElementById('vnd-conversion-preview');
             if (previewEl) {
-                previewEl.textContent = `User Price: ₱${phpValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} PHP (Incl. +₱700 markup)`;
+                previewEl.textContent = `₱${phpValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} PHP`;
             }
         }
 
@@ -1442,6 +1442,13 @@
             });
             gowns = Array.from(uniqueMap.values());
 
+            // Strictly sort items ascending by Item Number (ITEM-0001, ITEM-0002, etc.)
+            gowns.sort((a, b) => {
+                const idA = String(a.id || "").toUpperCase();
+                const idB = String(b.id || "").toUpperCase();
+                return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+            });
+
             const currentUser = JSON.parse(localStorage.getItem('sf_logged_user'));
 
             if (gowns.length === 0) {
@@ -1459,7 +1466,6 @@
                 let vndValue = getNormalizedVnd(gown);
                 let userPhpPrice = calculatePhpPrice(vndValue);
 
-                // Robust Image Verification: Ensure images always fall back cleanly to a valid image array
                 let images = gown.images;
                 if (!images || !Array.isArray(images) || images.length === 0 || (images.length === 1 && !images[0])) {
                     images = [
@@ -1701,21 +1707,22 @@
 
         async function handleAddNewGown(event) {
             event.preventDefault();
+            const idInput = document.getElementById('new-custom-id');
             const nameInput = document.getElementById('new-name');
             const descInput = document.getElementById('new-desc');
             const priceInput = document.getElementById('new-price-vnd');
-            if (!nameInput || !descInput || !priceInput) return;
+            if (!idInput || !nameInput || !descInput || !priceInput) return;
+
+            let customId = idInput.value.trim().toUpperCase();
+            if (!customId.startsWith("ITEM-")) {
+                customId = "ITEM-" + customId.replace(/[^0-9]/g, "").padStart(4, '0');
+            }
 
             const name = nameInput.value;
             const desc = descInput.value;
             const priceVnd = parseFloat(priceInput.value) || 0;
             
-            const currentList = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
-            const customId = `ITEM-00${currentList.length + 1}`;
-
             const fileInput = document.getElementById('new-imgs');
-            const videoInput = document.getElementById('new-video');
-
             const files = Array.from(fileInput.files);
             if (files.length < 3) {
                 alert("Please select at least 3 pictures for the product.");
@@ -1723,7 +1730,6 @@
             }
 
             let loadedImages = [];
-            let loadedVideo = "";
             let processedImages = 0;
 
             async function finalizeGown() {
@@ -1733,24 +1739,26 @@
                     desc,
                     priceVnd,
                     images: loadedImages,
-                    video: loadedVideo,
+                    video: "",
                     likes: [],
                     comments: [],
                     createdAt: Date.now()
                 };
 
-                currentList.push(newGown);
-                liveGownsCatalog = currentList;
+                // Remove any existing entry with this exact custom ID to prevent duplicates, then add/overwrite
+                liveGownsCatalog = liveGownsCatalog.filter(g => String(g.id) !== customId);
+                liveGownsCatalog.push(newGown);
+
                 persistLocalCatalog();
                 renderCatalog();
 
                 event.target.reset();
                 previewPhpConversion();
-                alert(`New dress published successfully with ID ${customId}!`);
+                alert(`Dress number ${customId} successfully published or filled in!`);
 
                 if (db && isFirestoreHealthy) {
                     try {
-                        const gownRef = doc(db, "gowns_catalog", String(customId));
+                        const gownRef = doc(db, "gowns_catalog", customId);
                         await setDoc(gownRef, newGown, { merge: true });
                     } catch (e) {
                         console.warn("Cloud sync queued in offline mode: ", e);
@@ -1758,31 +1766,15 @@
                 }
             }
 
-            if (videoInput.files && videoInput.files[0]) {
-                const videoReader = new FileReader();
-                videoReader.onload = function(e) {
-                    loadedVideo = e.target.result;
-                    checkCompletion();
-                };
-                videoReader.readAsDataURL(videoInput.files[0]);
-            } else {
-                checkCompletion();
-            }
-
             files.forEach((file, index) => {
                 resizeImage(file, 400, 400, 0.4, function(compressedDataUrl) {
                     loadedImages[index] = compressedDataUrl;
                     processedImages++;
-                    checkCompletion();
+                    if (processedImages === files.length) {
+                        finalizeGown();
+                    }
                 });
             });
-
-            function checkCompletion() {
-                const videoReady = (!videoInput.files[0] || loadedVideo !== "");
-                if (processedImages === files.length && videoReady) {
-                    finalizeGown();
-                }
-            }
         }
 
         const addGownForm = document.getElementById('add-gown-form');
@@ -1806,7 +1798,6 @@
             const gown = liveGownsCatalog.find(g => String(g.id) === String(id));
             if (!gown) return;
 
-            // Explicitly lock in name and price changes while leaving existing images and assets completely untouched
             gown.name = newName;
             gown.priceVnd = newVnd;
 
@@ -1941,7 +1932,6 @@
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     if (data && data.name && data.name !== "undefined") {
-                        // Ensure incoming remote doc has a valid image array or inherit defaults
                         if (!data.images || !Array.isArray(data.images) || data.images.length === 0) {
                             const localMatch = liveGownsCatalog.find(g => g.id === docSnap.id);
                             data.images = (localMatch && localMatch.images) ? localMatch.images : [
