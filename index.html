@@ -280,8 +280,8 @@
 
         .admin-form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 120px;
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px;
+            gap: 15px;
             align-items: flex-end;
         }
 
@@ -773,12 +773,10 @@
 </head>
 <body id="body-root">
 
-    <!-- Image Lightbox Modal Viewer -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="Enlarged Dress Design">
     </div>
 
-    <!-- Login Modal Pop-up on Visit -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
@@ -797,7 +795,6 @@
         </div>
     </div>
 
-    <!-- Floating Facebook Messenger Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">
         💬
     </a>
@@ -824,7 +821,6 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
-        <!-- Launch Progress Metrics Tracker Panel -->
         <div id="admin-panel-metrics" class="admin-panel">
             <h3>🚀 App Launch Progress: Registration Tracker</h3>
             <p style="font-size: 13px; color: #666; margin-top:0;">Track user registration growth as you prepare for the official launch.</p>
@@ -841,7 +837,7 @@
         </div>
 
         <div id="admin-panel-catalog" class="admin-panel">
-            <h3>⚙️ Admin Panel: Add New Dress Item (Enter VND & Markup)</h3>
+            <h3>⚙️ Admin Panel: Add New Dress Item (Price in VND + ₱700 Automatic Markup)</h3>
             <form onsubmit="handleAddNewGown(event)">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
@@ -855,11 +851,7 @@
                     <div class="form-group" style="margin-bottom:0;">
                         <label>Price in VND (₫):</label>
                         <input type="number" id="new-price-vnd" class="form-control" placeholder="e.g., 800000" step="1" oninput="previewPhpConversion()" required>
-                    </div>
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label>Markup (PHP):</label>
-                        <input type="number" id="new-markup" class="form-control" placeholder="e.g., 700" value="700" step="1" oninput="previewPhpConversion()" required>
-                        <small style="color: var(--primary); font-size: 11px; font-weight: bold;" id="vnd-conversion-preview">User Price: ₱0.00 PHP</small>
+                        <small style="color: var(--primary); font-size: 11px; font-weight: bold;" id="vnd-conversion-preview">User Price: ₱0.00 PHP (Incl. +₱700 markup)</small>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label>Upload Pictures (3+):</label>
@@ -940,7 +932,6 @@
                 Total Estimated Amount: ₱<span id="cart-total-display">0.00</span>
             </div>
 
-            <!-- Itemized Summary Box -->
             <div class="checkout-summary-box">
                 <h4>📦 Liked Items Summary</h4>
                 <div id="checkout-itemized-list">
@@ -992,6 +983,7 @@
         const db = getFirestore(app);
 
         const VND_TO_PHP_RATIO = 2 / 800;
+        const ADMIN_MARKUP = 700;
         const ADMIN_NAME = "SimplyFab";
         const ADMIN_PHONE = "021910";
         const COMPANY_EMAIL = "tin23_angela@gmail.com";
@@ -1002,7 +994,6 @@
                 name: "The Aria Ballgown",
                 desc: "Elegant princess-cut ballgown with crystal embellishments.",
                 priceVnd: 720000,
-                markup: 700,
                 images: [
                     "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
                     "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
@@ -1017,7 +1008,6 @@
                 name: "Velvet Evening Silhouette",
                 desc: "Sleek, form-fitting evening dress designed for gala events.",
                 priceVnd: 600000,
-                markup: 700,
                 images: [
                     "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
                     "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
@@ -1032,7 +1022,6 @@
                 name: "Royal Lace Modern Terno",
                 desc: "Traditional yet modern filipiniana aesthetic for formal occasions.",
                 priceVnd: 920000,
-                markup: 700,
                 images: [
                     "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
                     "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
@@ -1047,10 +1036,9 @@
         let cart = [];
         let liveGownsCatalog = [];
 
-        function calculatePhpPrice(vnd, markup) {
+        function calculatePhpPrice(vnd) {
             const baseVnd = parseFloat(vnd) || 0;
-            const itemMarkup = parseFloat(markup) || 0;
-            return (baseVnd * VND_TO_PHP_RATIO) + itemMarkup;
+            return (baseVnd * VND_TO_PHP_RATIO) + ADMIN_MARKUP;
         }
 
         function getRegisteredUsers() {
@@ -1174,11 +1162,10 @@
 
         window.previewPhpConversion = function() {
             const vndInput = parseFloat(document.getElementById('new-price-vnd').value) || 0;
-            const markupInput = parseFloat(document.getElementById('new-markup').value) || 0;
-            const phpValue = calculatePhpPrice(vndInput, markupInput);
+            const phpValue = calculatePhpPrice(vndInput);
             const previewEl = document.getElementById('vnd-conversion-preview');
             if (previewEl) {
-                previewEl.textContent = `User Price: ₱${phpValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} PHP`;
+                previewEl.textContent = `User Price: ₱${phpValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} PHP (Incl. +₱700 markup)`;
             }
         }
 
@@ -1320,7 +1307,7 @@
             
             let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             
-            // Filter out incomplete/corrupt documents (like blank items or missing names)
+            // Filter out incomplete/corrupt documents
             gowns = gowns.filter(g => g && g.name && g.name !== "undefined");
 
             const currentUser = JSON.parse(localStorage.getItem('sf_logged_user'));
@@ -1338,8 +1325,7 @@
                 const comments = gown.comments || [];
 
                 let vndValue = gown.priceVnd !== undefined ? gown.priceVnd : (parseFloat(gown.price || 0) / VND_TO_PHP_RATIO);
-                let markupValue = gown.markup !== undefined ? gown.markup : 0;
-                let userPhpPrice = calculatePhpPrice(vndValue, markupValue);
+                let userPhpPrice = calculatePhpPrice(vndValue);
 
                 const images = gown.images || [gown.img] || [];
                 let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom design">`).join('');
@@ -1384,7 +1370,6 @@
                             <p>${gown.desc || ''}</p>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
-                            <!-- Admin Edit Box (VND & Markup) -->
                             <div class="admin-price-box">
                                 <label>Edit Dress Name:</label>
                                 <div class="admin-price-input-group">
@@ -1393,10 +1378,6 @@
                                 <label>Edit Price in VND (₫):</label>
                                 <div class="admin-price-input-group">
                                     <input type="number" id="vnd-input-${gown.id}" value="${Math.round(vndValue)}" step="1">
-                                </div>
-                                <label>Edit Markup (PHP):</label>
-                                <div class="admin-price-input-group">
-                                    <input type="number" id="markup-input-${gown.id}" value="${markupValue}" step="1">
                                 </div>
                                 <button class="btn-save-inline-price" onclick="saveInlineItem('${gown.id}')">Save Changes</button>
                             </div>
@@ -1442,8 +1423,7 @@
             if (!gown) return;
 
             let vnd = gown.priceVnd !== undefined ? gown.priceVnd : (parseFloat(gown.price || 0) / VND_TO_PHP_RATIO);
-            let mk = gown.markup !== undefined ? gown.markup : 0;
-            let phpFinal = calculatePhpPrice(vnd, mk);
+            let phpFinal = calculatePhpPrice(vnd);
 
             const existing = cart.find(item => String(item.id) === String(id));
 
@@ -1492,8 +1472,7 @@
             let total = 0;
             tbody.innerHTML = cart.map(item => {
                 let vnd = item.priceVnd !== undefined ? item.priceVnd : (parseFloat(item.price || 0) / VND_TO_PHP_RATIO);
-                let mk = item.markup !== undefined ? item.markup : 0;
-                let unitPhp = calculatePhpPrice(vnd, mk);
+                let unitPhp = calculatePhpPrice(vnd);
                 const itemTotal = unitPhp * item.qty;
                 total += itemTotal;
 
@@ -1517,8 +1496,7 @@
             if (itemizedListEl && summaryTotalEl) {
                 itemizedListEl.innerHTML = cart.map(item => {
                     let vnd = item.priceVnd !== undefined ? item.priceVnd : (parseFloat(item.price || 0) / VND_TO_PHP_RATIO);
-                    let mk = item.markup !== undefined ? item.markup : 0;
-                    let sub = calculatePhpPrice(vnd, mk) * item.qty;
+                    let sub = calculatePhpPrice(vnd) * item.qty;
                     return `
                         <div class="summary-row">
                             <span>[${item.id}] ${item.name} (Qty: ${item.qty})</span>
@@ -1583,7 +1561,6 @@
             const name = document.getElementById('new-name').value;
             const desc = document.getElementById('new-desc').value;
             const priceVnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
-            const markup = parseFloat(document.getElementById('new-markup').value) || 0;
             
             const currentList = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const customId = `ITEM-00${currentList.length + 1}`;
@@ -1607,7 +1584,6 @@
                     name,
                     desc,
                     priceVnd,
-                    markup,
                     images: loadedImages,
                     video: loadedVideo,
                     likes: [],
@@ -1661,15 +1637,13 @@
         window.saveInlineItem = async function(id) {
             const nameInput = document.getElementById(`name-input-${id}`);
             const vndInput = document.getElementById(`vnd-input-${id}`);
-            const markupInput = document.getElementById(`markup-input-${id}`);
-            if (!nameInput || !vndInput || !markupInput) return;
+            if (!nameInput || !vndInput) return;
 
             const newName = nameInput.value.trim();
             const newVnd = parseFloat(vndInput.value);
-            const newMarkup = parseFloat(markupInput.value);
 
-            if (!newName || isNaN(newVnd) || newVnd < 0 || isNaN(newMarkup) || newMarkup < 0) {
-                alert("Please enter valid name, VND price, and markup.");
+            if (!newName || isNaN(newVnd) || newVnd < 0) {
+                alert("Please enter a valid name and VND price.");
                 return;
             }
 
@@ -1678,7 +1652,6 @@
             if (gown) {
                 gown.name = newName;
                 gown.priceVnd = newVnd;
-                gown.markup = newMarkup;
                 renderCatalog();
             }
 
@@ -1686,7 +1659,7 @@
 
             try {
                 const gownRef = doc(db, "gowns_catalog", String(id));
-                await setDoc(gownRef, { name: newName, priceVnd: newVnd, markup: newMarkup }, { merge: true });
+                await setDoc(gownRef, { name: newName, priceVnd: newVnd }, { merge: true });
             } catch (e) {
                 console.warn("Cloud sync update warning: ", e);
             }
@@ -1717,16 +1690,14 @@
 
             const itemsSummary = cart.map(i => {
                 let vnd = i.priceVnd !== undefined ? i.priceVnd : (parseFloat(i.price || 0) / VND_TO_PHP_RATIO);
-                let mk = i.markup !== undefined ? i.markup : 0;
-                let unit = calculatePhpPrice(vnd, mk);
+                let unit = calculatePhpPrice(vnd);
                 return `• [${i.id}] ${i.name} | Qty: ${i.qty} | Subtotal: ₱${(unit * i.qty).toFixed(2)}`;
             }).join('\n');
 
             let totalAmount = 0;
             cart.forEach(i => {
                 let vnd = i.priceVnd !== undefined ? i.priceVnd : (parseFloat(i.price || 0) / VND_TO_PHP_RATIO);
-                let mk = i.markup !== undefined ? i.markup : 0;
-                totalAmount += calculatePhpPrice(vnd, mk) * i.qty;
+                totalAmount += calculatePhpPrice(vnd) * i.qty;
             });
 
             const messengerText = `Hello SimplyFab Page! 👋\n\nI would like to inquire about these liked items:\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n\n👗 Liked Dresses:\n${itemsSummary}\n\n💰 Total Estimated Amount: ₱${totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}\n\nPlease assist me!`;
