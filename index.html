@@ -133,7 +133,7 @@
             font-weight: 600;
             cursor: pointer;
             color: #555;
-            display: none; /* Controlled dynamically */
+            display: none;
         }
 
         .admin-toggle-btn:hover {
@@ -302,7 +302,7 @@
             background-color: #9d6b76;
         }
 
-        /* Catalog Grid & Media Display (Sliding Left Animation) */
+        /* Catalog Grid & Media Display */
         .catalog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -582,7 +582,7 @@
 
     <section id="home" class="hero">
         <h1>Look Stunning. Feel Beautiful.</h1>
-        <p>Your premier destination for elegant dress rentals and professional styling services.</p>
+        <p>Your premier destination for elegant dresses and professional styling services.</p>
         <a href="#catalog" class="btn-primary">Explore Collection</a>
     </section>
 
@@ -658,8 +658,8 @@
         </div>
 
         <div id="admin-panel-tracker" class="admin-panel">
-            <h3>📋 Admin Panel: Inquiry & Order Tracker</h3>
-            <p style="font-size: 13px; color: #666; margin-top:0;">Manage and update client reservation statuses below (Pending / Approved / Completed).</p>
+            <h3>📋 Admin Panel: Purchase & Order Tracker</h3>
+            <p style="font-size: 13px; color: #666; margin-top:0;">Manage and update client purchase statuses below (Pending / Approved / Completed).</p>
             <div style="overflow-x: auto;">
                 <table class="tracker-table">
                     <thead>
@@ -667,7 +667,7 @@
                             <th>Date</th>
                             <th>Client Name</th>
                             <th>Phone</th>
-                            <th>Event Date</th>
+                            <th>Shipping Address</th>
                             <th>Selected Items / Dresses</th>
                             <th>Payment Method</th>
                             <th>Approval Status</th>
@@ -726,7 +726,7 @@
             </div>
 
             <form onsubmit="handleCheckout(event)">
-                <h3 style="color: var(--primary); border-bottom: 1px solid var(--accent); padding-bottom: 8px; margin-bottom: 15px;">Customer & Payment Details</h3>
+                <h3 style="color: var(--primary); border-bottom: 1px solid var(--accent); padding-bottom: 8px; margin-bottom: 15px;">Customer & Shipping Details</h3>
                 <div class="form-group">
                     <label for="client-name">Full Name:</label>
                     <input type="text" id="client-name" class="form-control" placeholder="Enter your full name" required>
@@ -736,8 +736,8 @@
                     <input type="text" id="client-phone" class="form-control" placeholder="+63 9XX XXX XXXX" required>
                 </div>
                 <div class="form-group">
-                    <label for="event-date">Target Event Date:</label>
-                    <input type="date" id="event-date" class="form-control" required>
+                    <label for="shipping-address">Shipping Address:</label>
+                    <textarea id="shipping-address" class="form-control" rows="3" placeholder="Enter your complete delivery address" required></textarea>
                 </div>
                 
                 <div class="form-group">
@@ -746,14 +746,14 @@
                         <option value="GCash">GCash</option>
                         <option value="Maya">Maya</option>
                         <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Cash on Fitting / Store Pickup">Cash on Fitting / Store Pickup</option>
+                        <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
                     </select>
                 </div>
 
                 <div id="qr-box-container" class="qr-display-container">
                     <p style="margin: 0 0 8px 0; font-weight: 600; font-size: 13px; color: var(--primary);" id="qr-instruction">Scan QR Code to pay via GCash:</p>
                     <img id="checkout-qr-img" src="" alt="Payment QR Code">
-                    <p style="font-size: 11px; color: #666; margin: 6px 0 0 0;">Please upload your payment screenshot upon inquiry confirmation.</p>
+                    <p style="font-size: 11px; color: #666; margin: 6px 0 0 0;">Please upload your payment screenshot upon order confirmation.</p>
                 </div>
 
                 <button type="submit" class="btn-submit">Complete Checkout & Submit Order</button>
@@ -763,7 +763,7 @@
 
     <footer id="contact">
         <p><strong>SimplyFab Dress Catalogue</strong></p>
-        <p>Website: <span id="footer-web">SimyiyFab.com</span> | Email: <span id="footer-email">tin23_angela@gmail.com</span> | Phone: <span id="footer-phone">09954836767</span></p>
+        <p>Website: <span id="footer-web">SimplyFab.com</span> | Email: <span id="footer-email">tin23_angela@gmail.com</span> | Phone: <span id="footer-phone">09954836767</span></p>
         <p style="margin-top: 15px; font-size: 11px; color: #aaa;">&copy; 2026 SimplyFab Dress Catalogue. All rights reserved.</p>
     </footer>
 
@@ -1001,7 +1001,7 @@
                         <div class="card-body">
                             <h3>${gown.name}</h3>
                             <p>${gown.desc}</p>
-                            <div class="price">₱${parseFloat(gown.price).toLocaleString('en-US', {minimumFractionDigits: 2})} / rental</div>
+                            <div class="price">₱${parseFloat(gown.price).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
                             <button class="btn-cart" onclick="addToCart(${gown.id})">Add to Cart 🛍️</button>
                         </div>
                     </div>
@@ -1153,7 +1153,7 @@
                     <td>${inq.dateSubmitted}</td>
                     <td><strong>${inq.name}</strong></td>
                     <td>${inq.phone}</td>
-                    <td>${inq.eventDate}</td>
+                    <td>${inq.shippingAddress}</td>
                     <td>${inq.itemsSummary}</td>
                     <td>${inq.paymentMethod}</td>
                     <td>
@@ -1169,7 +1169,7 @@
 
         function loadContactInfo() {
             const contactInfo = JSON.parse(localStorage.getItem('sf_contact_info')) || {
-                web: "SimyiyFab.com",
+                web: "SimplyFab.com",
                 email: "tin23_angela@gmail.com",
                 phone: "09954836767"
             };
@@ -1274,7 +1274,7 @@
 
             const name = document.getElementById('client-name').value;
             const phone = document.getElementById('client-phone').value;
-            const eventDate = document.getElementById('event-date').value;
+            const shippingAddress = document.getElementById('shipping-address').value;
             const paymentMethod = document.getElementById('payment-method').value;
             const dateSubmitted = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
@@ -1285,7 +1285,7 @@
                 dateSubmitted,
                 name,
                 phone,
-                eventDate,
+                shippingAddress,
                 itemsSummary,
                 paymentMethod,
                 status: 'Pending'
@@ -1324,7 +1324,6 @@
         }
 
         // Initialize state on load
-        localStorage.removeItem('sf_logged_user'); // Clears old session to ensure the login popup displays reliably on refresh
         checkVisitorSession();
         renderCatalog();
         renderCart();
