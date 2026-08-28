@@ -23,7 +23,6 @@
             scroll-behavior: smooth;
         }
 
-        /* Modal Overlay */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -59,7 +58,6 @@
             margin-bottom: 20px;
         }
 
-        /* Image Lightbox Modal */
         .image-lightbox-overlay {
             position: fixed;
             top: 0;
@@ -86,7 +84,6 @@
             object-fit: contain;
         }
 
-        /* Floating Facebook Messenger Bubble */
         .messenger-bubble {
             position: fixed;
             bottom: 25px;
@@ -110,7 +107,6 @@
             transform: scale(1.08);
         }
 
-        /* Navigation */
         nav {
             background-color: var(--white);
             padding: 15px 40px;
@@ -176,7 +172,6 @@
             background: #ddd;
         }
 
-        /* Hero Section */
         .hero {
             background: linear-gradient(rgba(181, 131, 141, 0.75), rgba(181, 131, 141, 0.75)), url('https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
             color: var(--white);
@@ -213,7 +208,6 @@
             color: #333;
         }
 
-        /* Container Layouts */
         .container {
             max-width: 1100px;
             margin: 50px auto;
@@ -235,7 +229,6 @@
             margin: 0;
         }
 
-        /* Admin Management Panels */
         .admin-panel {
             background: #fff;
             padding: 25px;
@@ -256,7 +249,6 @@
             font-size: 18px;
         }
 
-        /* Launch Progress Metric Counter Grid */
         .launch-metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -301,7 +293,6 @@
             align-items: flex-end;
         }
 
-        /* Tracker Table in Admin Panel */
         .tracker-table {
             width: 100%;
             border-collapse: collapse;
@@ -337,7 +328,6 @@
             background-color: #9d6b76;
         }
 
-        /* Catalog Grid & Media Display */
         .catalog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -372,7 +362,6 @@
             z-index: 10;
         }
 
-        /* Heart / Like Container with Count */
         .like-container {
             position: absolute;
             top: 10px;
@@ -480,7 +469,6 @@
             margin-bottom: 15px;
         }
 
-        /* Comments Section per Product */
         .comments-section {
             background-color: #fdf6f6;
             border-top: 1px solid var(--accent);
@@ -561,7 +549,6 @@
             background-color: #9d6b76;
         }
 
-        /* Admin Quick Price & Name Edit Box inside Card */
         .admin-price-box {
             display: none;
             background: #fdf6f6;
@@ -654,7 +641,6 @@
             display: flex;
         }
 
-        /* Wishlist / Liked Items Section */
         .cart-section {
             background: var(--white);
             padding: 30px;
@@ -760,7 +746,6 @@
             background-color: #006dd9;
         }
 
-        /* Footer */
         footer {
             background-color: #333;
             color: #fff;
@@ -792,14 +777,14 @@
         <div class="modal-card">
             <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
             <p>Please enter your Name and Phone Number to continue.</p>
-            <form onsubmit="handleVisitorLogin(event)">
+            <form id="visitor-login-form">
                 <div class="form-group" style="text-align: left;">
                     <label for="visitor-name">Your Name:</label>
-                    <input type="text" id="visitor-name" class="form-control" placeholder="e.g., Maria Santos" required>
+                    <input type="text" id="visitor-name" class="form-control" placeholder="e.g., Maria Santos or SimplyFab" required>
                 </div>
                 <div class="form-group" style="text-align: left;">
                     <label for="visitor-phone">Phone Number / Admin Code:</label>
-                    <input type="text" id="visitor-phone" class="form-control" placeholder="Enter your phone number" required>
+                    <input type="text" id="visitor-phone" class="form-control" placeholder="Enter phone number or admin code" required>
                 </div>
                 <button type="submit" class="btn-submit" style="background-color: var(--primary);">Enter Catalogue</button>
             </form>
@@ -821,7 +806,7 @@
             <li><a href="#catalog">Dress Collection</a></li>
             <li><a href="#cart-checkout">My Liked Items</a></li>
             <li><a href="#contact">Contact</a></li>
-            <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" onclick="toggleAdminPanel()">🔒 Admin Console</button></li>
+            <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" type="button">🔒 Admin Console</button></li>
         </ul>
     </nav>
 
@@ -854,7 +839,7 @@
 
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>⚙️ Admin Panel: Add New Dress Item (Price in VND + ₱700 Automatic Markup)</h3>
-            <form onsubmit="handleAddNewGown(event)">
+            <form id="add-gown-form">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-name">Dress Name / Label:</label>
@@ -866,7 +851,7 @@
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-price-vnd">Price in VND (₫):</label>
-                        <input type="number" id="new-price-vnd" class="form-control" placeholder="e.g., 800000" step="1" oninput="previewPhpConversion()" required>
+                        <input type="number" id="new-price-vnd" class="form-control" placeholder="e.g., 800000" step="1" required>
                         <small style="color: var(--primary); font-size: 11px; font-weight: bold;" id="vnd-conversion-preview">User Price: ₱0.00 PHP (Incl. +₱700 markup)</small>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
@@ -886,7 +871,7 @@
         <div id="admin-panel-duplicates" class="admin-panel" style="border-left-color: #d9534f;">
             <h3>🧹 Admin Panel: Duplicate & Clean-up Filter</h3>
             <p style="font-size: 13px; color: #666; margin-top:0;">Scan and instantly purge corrupted, accidental duplicate items, or orphaned records from Firebase.</p>
-            <button type="button" class="btn-export" style="background-color: #d9534f;" onclick="scanAndPurgeDuplicates()">🔍 Scan & Clean Duplicates Now</button>
+            <button type="button" id="purge-duplicates-btn" class="btn-export" style="background-color: #d9534f;">🔍 Scan & Clean Duplicates Now</button>
         </div>
 
         <div id="admin-panel-users" class="admin-panel">
@@ -905,12 +890,12 @@
                     </tbody>
                 </table>
             </div>
-            <button type="button" class="btn-export" onclick="exportRegisteredUsersCSV()">📥 Export Users to CSV</button>
+            <button type="button" id="export-users-btn" class="btn-export">📥 Export Users to CSV</button>
         </div>
 
         <div id="admin-panel-contact" class="admin-panel">
             <h3>⚙️ Admin Panel: Update Contact & Business Details</h3>
-            <form onsubmit="handleUpdateContact(event)">
+            <form id="update-contact-form">
                 <div class="admin-contact-grid">
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="admin-web">Website Address/URL:</label>
@@ -967,7 +952,7 @@
                 </div>
             </div>
 
-            <form onsubmit="handleSendToMessenger(event)">
+            <form id="send-messenger-form">
                 <h3 style="color: var(--primary); border-bottom: 1px solid var(--accent); padding-bottom: 8px; margin-bottom: 15px;">Your Contact Information</h3>
                 <div class="form-group">
                     <label for="client-name">Your Name:</label>
@@ -1100,14 +1085,14 @@
                 lightboxImg.src = imgSrc;
                 lightbox.classList.add('active');
             }
-        }
+        };
 
         window.closeLightbox = function() {
             const lightbox = document.getElementById('image-lightbox');
             if (lightbox) {
                 lightbox.classList.remove('active');
             }
-        }
+        };
 
         window.toggleLikeItem = async function(id) {
             const user = JSON.parse(localStorage.getItem('sf_logged_user'));
@@ -1138,7 +1123,7 @@
             } catch (e) {
                 console.warn("Firestore sync warning on like: ", e);
             }
-        }
+        };
 
         window.addComment = async function(event, id) {
             event.preventDefault();
@@ -1174,7 +1159,7 @@
             } catch (e) {
                 console.warn("Firestore sync warning on comment: ", e);
             }
-        }
+        };
 
         window.deleteComment = async function(gownId, commentTimestamp) {
             if (!confirm("Admin: Are you sure you want to delete this comment?")) return;
@@ -1193,9 +1178,9 @@
             } catch (e) {
                 console.warn("Firestore sync warning on delete comment: ", e);
             }
-        }
+        };
 
-        window.previewPhpConversion = function() {
+        function previewPhpConversion() {
             const vndInput = parseFloat(document.getElementById('new-price-vnd').value) || 0;
             const phpValue = calculatePhpPrice(vndInput);
             const previewEl = document.getElementById('vnd-conversion-preview');
@@ -1204,13 +1189,21 @@
             }
         }
 
-        window.handleVisitorLogin = function(event) {
+        const newPriceVndInput = document.getElementById('new-price-vnd');
+        if (newPriceVndInput) {
+            newPriceVndInput.addEventListener('input', previewPhpConversion);
+        }
+
+        function handleVisitorLogin(event) {
             event.preventDefault();
-            const name = document.getElementById('visitor-name').value.trim();
-            const phone = document.getElementById('visitor-phone').value.trim();
+            const nameInput = document.getElementById('visitor-name');
+            const phoneInput = document.getElementById('visitor-phone');
+            if (!nameInput || !phoneInput) return;
+
+            const name = nameInput.value.trim();
+            const phone = phoneInput.value.trim();
             
             if (name && phone) {
-                // Robust admin check: supports variations like "SimplyFab", "simplyfab", and code "021910"
                 if (name.toLowerCase() === ADMIN_NAME.toLowerCase() && phone === ADMIN_PHONE) {
                     localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone, isAdmin: true }));
                     const modal = document.getElementById('login-modal');
@@ -1243,6 +1236,11 @@
                 renderCatalog();
                 updateLaunchMetrics();
             }
+        }
+
+        const visitorLoginForm = document.getElementById('visitor-login-form');
+        if (visitorLoginForm) {
+            visitorLoginForm.addEventListener('submit', handleVisitorLogin);
         }
 
         function updateWelcomeBanner(name, isAdmin) {
@@ -1306,6 +1304,11 @@
                 renderRegisteredUsers();
                 updateLaunchMetrics();
             }
+        };
+
+        const adminToggleBtnUi = document.getElementById('admin-toggle-btn-ui');
+        if (adminToggleBtnUi) {
+            adminToggleBtnUi.addEventListener('click', window.toggleAdminPanel);
         }
 
         window.scanAndPurgeDuplicates = async function() {
@@ -1331,6 +1334,11 @@
                 console.error("Error purging duplicates:", err);
                 alert("Failed to complete scan. Check console log.");
             }
+        };
+
+        const purgeDuplicatesBtn = document.getElementById('purge-duplicates-btn');
+        if (purgeDuplicatesBtn) {
+            purgeDuplicatesBtn.addEventListener('click', window.scanAndPurgeDuplicates);
         }
 
         function renderRegisteredUsers() {
@@ -1371,6 +1379,11 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        };
+
+        const exportUsersBtn = document.getElementById('export-users-btn');
+        if (exportUsersBtn) {
+            exportUsersBtn.addEventListener('click', window.exportRegisteredUsersCSV);
         }
 
         function renderCatalog() {
@@ -1469,6 +1482,7 @@
                                 ${commentsHtml}
                             </div>
                             <form onsubmit="addComment(event, '${itemId}')" class="comment-input-group" style="margin-top: 8px;">
+                                <label for="comment-input-${itemId}" style="display:none;">Leave a comment</label>
                                 <input type="text" id="comment-input-${itemId}" class="comment-input" placeholder="Leave a comment..." required>
                                 <button type="submit" class="btn-comment">Post</button>
                             </form>
@@ -1493,7 +1507,7 @@
             container.setAttribute('data-index', currentIndex);
             
             track.style.transform = `translateX(-${currentIndex * 100}%)`;
-        }
+        };
 
         window.addToCart = function(id) {
             const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
@@ -1513,7 +1527,7 @@
 
             renderCart();
             alert(`"${gown.name}" (${gown.id}) has been added to your liked items!`);
-        }
+        };
 
         window.updateCartQty = function(id, delta) {
             const item = cart.find(i => String(i.id) === String(id));
@@ -1524,12 +1538,12 @@
                 }
             }
             renderCart();
-        }
+        };
 
         window.removeFromCart = function(id) {
             cart = cart.filter(i => String(i.id) !== String(id));
             renderCart();
-        }
+        };
 
         function renderCart() {
             const tbody = document.getElementById('cart-items-body');
@@ -1634,11 +1648,16 @@
             reader.readAsDataURL(file);
         }
 
-        window.handleAddNewGown = async function(event) {
+        async function handleAddNewGown(event) {
             event.preventDefault();
-            const name = document.getElementById('new-name').value;
-            const desc = document.getElementById('new-desc').value;
-            const priceVnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
+            const nameInput = document.getElementById('new-name');
+            const descInput = document.getElementById('new-desc');
+            const priceInput = document.getElementById('new-price-vnd');
+            if (!nameInput || !descInput || !priceInput) return;
+
+            const name = nameInput.value;
+            const desc = descInput.value;
+            const priceVnd = parseFloat(priceInput.value) || 0;
             
             const currentList = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const customId = `ITEM-00${currentList.length + 1}`;
@@ -1712,6 +1731,11 @@
             }
         }
 
+        const addGownForm = document.getElementById('add-gown-form');
+        if (addGownForm) {
+            addGownForm.addEventListener('submit', handleAddNewGown);
+        }
+
         window.saveInlineItem = async function(id) {
             const nameInput = document.getElementById(`name-input-${id}`);
             const vndInput = document.getElementById(`vnd-input-${id}`);
@@ -1744,13 +1768,18 @@
             } catch (e) {
                 console.warn("Cloud sync update warning: ", e);
             }
-        }
+        };
 
-        window.handleUpdateContact = function(event) {
+        function handleUpdateContact(event) {
             event.preventDefault();
-            const web = document.getElementById('admin-web').value;
-            const email = document.getElementById('admin-email').value;
-            const phone = document.getElementById('admin-phone').value;
+            const webInput = document.getElementById('admin-web');
+            const emailInput = document.getElementById('admin-email');
+            const phoneInput = document.getElementById('admin-phone');
+            if (!webInput || !emailInput || !phoneInput) return;
+
+            const web = webInput.value;
+            const email = emailInput.value;
+            const phone = phoneInput.value;
 
             const contactInfo = { web, email, phone };
             localStorage.setItem('sf_contact_info', JSON.stringify(contactInfo));
@@ -1759,15 +1788,24 @@
             alert("Contact details updated successfully!");
         }
 
-        window.handleSendToMessenger = function(event) {
+        const updateContactForm = document.getElementById('update-contact-form');
+        if (updateContactForm) {
+            updateContactForm.addEventListener('submit', handleUpdateContact);
+        }
+
+        function handleSendToMessenger(event) {
             event.preventDefault();
             if (cart.length === 0) {
                 alert("Your liked items list is empty! Please select at least one dress.");
                 return;
             }
 
-            const name = document.getElementById('client-name').value;
-            const phone = document.getElementById('client-phone').value;
+            const nameInput = document.getElementById('client-name');
+            const phoneInput = document.getElementById('client-phone');
+            if (!nameInput || !phoneInput) return;
+
+            const name = nameInput.value;
+            const phone = phoneInput.value;
 
             const itemsSummary = cart.map(i => {
                 let vnd = getNormalizedVnd(i);
@@ -1790,6 +1828,11 @@
             window.open('https://www.facebook.com/messages/t/110124887067313', '_blank');
         }
 
+        const sendMessengerForm = document.getElementById('send-messenger-form');
+        if (sendMessengerForm) {
+            sendMessengerForm.addEventListener('submit', handleSendToMessenger);
+        }
+
         window.deleteGown = async function(id) {
             if (confirm("Remove this dress from catalog?")) {
                 let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
@@ -1804,7 +1847,7 @@
                     console.warn("Cloud delete warning: ", e);
                 }
             }
-        }
+        };
 
         async function initRealtimeCatalog() {
             for (const defaultGown of defaultGowns) {
