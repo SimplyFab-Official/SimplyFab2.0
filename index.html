@@ -1307,8 +1307,8 @@
             
             let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             
-            // Filter out incomplete/corrupt documents
-            gowns = gowns.filter(g => g && g.name && g.name !== "undefined");
+            // Filter out incomplete or uninitialized records
+            gowns = gowns.filter(g => g && g.id && g.name && g.name !== "undefined");
 
             const currentUser = JSON.parse(localStorage.getItem('sf_logged_user'));
 
@@ -1318,8 +1318,8 @@
                 return;
             }
 
-            grid.innerHTML = gowns.map((gown, idx) => {
-                const itemId = gown.id || `ITEM-00${idx + 1}`;
+            grid.innerHTML = gowns.map((gown) => {
+                const itemId = gown.id;
                 const likes = gown.likes || [];
                 const isLiked = currentUser ? likes.includes(currentUser.phone) : false;
                 const comments = gown.comments || [];
@@ -1335,8 +1335,8 @@
 
                 const totalSlides = images.length + (gown.video ? 1 : 0);
                 const carouselControls = totalSlides > 1 ? `
-                    <button class="carousel-btn prev" onclick="slideMedia('${gown.id}', -1)">&#10094;</button>
-                    <button class="carousel-btn next" onclick="slideMedia('${gown.id}', 1)">&#10095;</button>
+                    <button class="carousel-btn prev" onclick="slideMedia('${itemId}', -1)">&#10094;</button>
+                    <button class="carousel-btn next" onclick="slideMedia('${itemId}', 1)">&#10095;</button>
                 ` : '';
 
                 const commentsHtml = comments.length > 0 ? comments.map(c => `
@@ -1345,22 +1345,22 @@
                             <span class="comment-author">${c.author}:</span> ${c.text}
                             <div style="font-size: 10px; color: #999;">${c.date}</div>
                         </div>
-                        <button class="btn-delete-comment" onclick="deleteComment('${gown.id}', ${c.id || 0})" title="Delete comment">×</button>
+                        <button class="btn-delete-comment" onclick="deleteComment('${itemId}', ${c.id || 0})" title="Delete comment">×</button>
                     </div>
                 `).join('') : `<div style="color: #888; font-size: 11px; text-align: center; padding: 4px;">No comments yet. Be the first!</div>`;
 
                 return `
-                    <div class="card" id="card-${gown.id}">
+                    <div class="card" id="card-${itemId}">
                         <div class="item-badge">${itemId}</div>
                         <div class="like-container">
-                            <button class="btn-heart" onclick="toggleLikeItem('${gown.id}')" title="Like item">
+                            <button class="btn-heart" onclick="toggleLikeItem('${itemId}')" title="Like item">
                                 ${isLiked ? '❤️' : '🤍'}
                             </button>
                             <span class="like-count">${likes.length}</span>
                         </div>
-                        <button class="btn-delete-item" onclick="deleteGown('${gown.id}')" title="Delete item">×</button>
+                        <button class="btn-delete-item" onclick="deleteGown('${itemId}')" title="Delete item">×</button>
                         <div class="carousel-container" data-index="0" data-total="${totalSlides}">
-                            <div class="carousel-track" id="track-${gown.id}">
+                            <div class="carousel-track" id="track-${itemId}">
                                 ${mediaHtml}
                             </div>
                             ${carouselControls}
@@ -1373,16 +1373,16 @@
                             <div class="admin-price-box">
                                 <label>Edit Dress Name:</label>
                                 <div class="admin-price-input-group">
-                                    <input type="text" id="name-input-${gown.id}" value="${gown.name}">
+                                    <input type="text" id="name-input-${itemId}" value="${gown.name}">
                                 </div>
                                 <label>Edit Price in VND (₫):</label>
                                 <div class="admin-price-input-group">
-                                    <input type="number" id="vnd-input-${gown.id}" value="${Math.round(vndValue)}" step="1">
+                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}" step="1">
                                 </div>
-                                <button class="btn-save-inline-price" onclick="saveInlineItem('${gown.id}')">Save Changes</button>
+                                <button class="btn-save-inline-price" onclick="saveInlineItem('${itemId}')">Save Changes</button>
                             </div>
 
-                            <button class="btn-cart" onclick="addToCart('${gown.id}')">Add to Liked Items 🛍️</button>
+                            <button class="btn-cart" onclick="addToCart('${itemId}')">Add to Liked Items 🛍️</button>
                         </div>
 
                         <div class="comments-section">
@@ -1390,8 +1390,8 @@
                             <div class="comments-list">
                                 ${commentsHtml}
                             </div>
-                            <form onsubmit="addComment(event, '${gown.id}')" class="comment-input-group" style="margin-top: 8px;">
-                                <input type="text" id="comment-input-${gown.id}" class="comment-input" placeholder="Leave a comment..." required>
+                            <form onsubmit="addComment(event, '${itemId}')" class="comment-input-group" style="margin-top: 8px;">
+                                <input type="text" id="comment-input-${itemId}" class="comment-input" placeholder="Leave a comment..." required>
                                 <button type="submit" class="btn-comment">Post</button>
                             </form>
                         </div>
@@ -1658,6 +1658,7 @@
             alert(`Item ${id} successfully updated!`);
 
             try {
+                // Strictly target and update the exact existing Firestore document ID
                 const gownRef = doc(db, "gowns_catalog", String(id));
                 await setDoc(gownRef, { name: newName, priceVnd: newVnd }, { merge: true });
             } catch (e) {
@@ -1729,7 +1730,10 @@
             onSnapshot(collection(db, "gowns_catalog"), (snapshot) => {
                 let gowns = [];
                 snapshot.forEach((docSnap) => {
-                    gowns.push({ id: docSnap.id, ...docSnap.data() });
+                    const data = docSnap.data();
+                    if (data && data.name && data.name !== "undefined") {
+                        gowns.push({ id: docSnap.id, ...data });
+                    }
                 });
                 
                 if (gowns.length > 0) {
