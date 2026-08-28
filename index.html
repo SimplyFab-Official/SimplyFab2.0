@@ -782,10 +782,12 @@
 </head>
 <body id="body-root">
 
+    <!-- Image Lightbox Modal Viewer -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="Enlarged Dress Design">
     </div>
 
+    <!-- Login Modal Pop-up on Visit -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
@@ -804,6 +806,7 @@
         </div>
     </div>
 
+    <!-- Floating Facebook Messenger Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">
         💬
     </a>
@@ -833,6 +836,7 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
+        <!-- Launch Progress Metrics Tracker Panel -->
         <div id="admin-panel-metrics" class="admin-panel">
             <h3>🚀 App Launch Progress: Registration Tracker</h3>
             <p style="font-size: 13px; color: #666; margin-top:0;">Track user registration growth as you prepare for the official launch.</p>
@@ -944,6 +948,7 @@
                 Total Estimated Amount: ₱<span id="cart-total-display">0.00</span>
             </div>
 
+            <!-- Itemized Summary Box -->
             <div class="checkout-summary-box">
                 <h4>📦 Liked Items Summary</h4>
                 <div id="checkout-itemized-list">
@@ -1393,6 +1398,7 @@
                             <p>${gown.desc || ''}</p>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
+                            <!-- Admin Edit Box (VND Price + Auto +₱700 Markup) -->
                             <div class="admin-price-box">
                                 <label>Edit Dress Name:</label>
                                 <div class="admin-price-input-group">
@@ -1681,6 +1687,7 @@
             alert(`Item ${id} successfully updated!`);
 
             try {
+                // Target exactly the existing document ID without creating duplicates or new keys
                 const gownRef = doc(db, "gowns_catalog", String(id));
                 await setDoc(gownRef, { name: newName, priceVnd: newVnd }, { merge: true });
             } catch (e) {
@@ -1748,7 +1755,17 @@
             }
         }
 
-        function initRealtimeCatalog() {
+        async function initRealtimeCatalog() {
+            // Automatically push default items to Firestore if they don't exist yet, preventing missing doc mismatches
+            for (const defaultGown of defaultGowns) {
+                try {
+                    const ref = doc(db, "gowns_catalog", defaultGown.id);
+                    await setDoc(ref, defaultGown, { merge: true });
+                } catch (err) {
+                    console.warn("Initialization sync notice:", err);
+                }
+            }
+
             onSnapshot(collection(db, "gowns_catalog"), (snapshot) => {
                 let gowns = [];
                 snapshot.forEach((docSnap) => {
