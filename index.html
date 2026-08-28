@@ -773,10 +773,12 @@
 </head>
 <body id="body-root">
 
+    <!-- Image Lightbox Modal Viewer -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="Enlarged Dress Design">
     </div>
 
+    <!-- Login Modal Pop-up on Visit -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
@@ -795,6 +797,7 @@
         </div>
     </div>
 
+    <!-- Floating Facebook Messenger Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">
         💬
     </a>
@@ -821,6 +824,7 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
+        <!-- Launch Progress Metrics Tracker Panel -->
         <div id="admin-panel-metrics" class="admin-panel">
             <h3>🚀 App Launch Progress: Registration Tracker</h3>
             <p style="font-size: 13px; color: #666; margin-top:0;">Track user registration growth as you prepare for the official launch.</p>
@@ -936,6 +940,7 @@
                 Total Estimated Amount: ₱<span id="cart-total-display">0.00</span>
             </div>
 
+            <!-- Itemized Summary Box -->
             <div class="checkout-summary-box">
                 <h4>📦 Liked Items Summary</h4>
                 <div id="checkout-itemized-list">
@@ -1314,6 +1319,10 @@
             if (!grid) return;
             
             let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
+            
+            // Filter out incomplete/corrupt documents (like blank items or missing names)
+            gowns = gowns.filter(g => g && g.name && g.name !== "undefined");
+
             const currentUser = JSON.parse(localStorage.getItem('sf_logged_user'));
 
             if (gowns.length === 0) {
@@ -1328,12 +1337,11 @@
                 const isLiked = currentUser ? likes.includes(currentUser.phone) : false;
                 const comments = gown.comments || [];
 
-                // Fallback compatibility for old items stored with .price
                 let vndValue = gown.priceVnd !== undefined ? gown.priceVnd : (parseFloat(gown.price || 0) / VND_TO_PHP_RATIO);
                 let markupValue = gown.markup !== undefined ? gown.markup : 0;
                 let userPhpPrice = calculatePhpPrice(vndValue, markupValue);
 
-                const images = gown.images || [gown.img];
+                const images = gown.images || [gown.img] || [];
                 let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom design">`).join('');
                 if (gown.video) {
                     mediaHtml += `<video src="${gown.video}" controls muted></video>`;
@@ -1373,9 +1381,10 @@
                         </div>
                         <div class="card-body">
                             <h3>${gown.name}</h3>
-                            <p>${gown.desc}</p>
+                            <p>${gown.desc || ''}</p>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
+                            <!-- Admin Edit Box (VND & Markup) -->
                             <div class="admin-price-box">
                                 <label>Edit Dress Name:</label>
                                 <div class="admin-price-input-group">
