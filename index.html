@@ -133,6 +133,7 @@
             font-weight: 600;
             cursor: pointer;
             color: #555;
+            display: none; /* Controlled dynamically */
         }
 
         .admin-toggle-btn:hover {
@@ -548,14 +549,14 @@
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
-            <p>Please enter your name and phone number to browse and access our dress collection.</p>
+            <p>Please enter your name and phone number to browse or access the admin console.</p>
             <form onsubmit="handleVisitorLogin(event)">
                 <div class="form-group" style="text-align: left;">
-                    <label for="visitor-name">Full Name:</label>
+                    <label for="visitor-name">Name / Admin Name:</label>
                     <input type="text" id="visitor-name" class="form-control" placeholder="Enter your name" required>
                 </div>
                 <div class="form-group" style="text-align: left;">
-                    <label for="visitor-phone">Phone Number:</label>
+                    <label for="visitor-phone">Phone Number / Admin Code:</label>
                     <input type="text" id="visitor-phone" class="form-control" placeholder="Enter your phone number" required>
                 </div>
                 <button type="submit" class="btn-submit">Enter Website</button>
@@ -575,7 +576,7 @@
             <li><a href="#catalog">Dress Collection</a></li>
             <li><a href="#cart-checkout">Cart & Checkout</a></li>
             <li><a href="#contact">Contact</a></li>
-            <li><button class="admin-toggle-btn" onclick="toggleAdminPanel()">🔒 Admin Mode</button></li>
+            <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" onclick="toggleAdminPanel()">🔒 Admin Console</button></li>
         </ul>
     </nav>
 
@@ -770,12 +771,16 @@
         // Exact Conversion Ratio: 800 VND = 2 PHP -> 1 VND = 2 / 800 PHP (0.0025)
         const VND_TO_PHP_RATIO = 2 / 800;
 
+        // Admin Credentials mapping
+        const ADMIN_NAME = "SimplyFab";
+        const ADMIN_PHONE = "021910";
+
         const defaultGowns = [
             {
                 id: 1,
                 name: "The Aria Ballgown",
                 desc: "Elegant princess-cut ballgown with crystal embellishments.",
-                price: "2500.00", // PHP equivalent
+                price: "2500.00",
                 images: [
                     "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
                     "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
@@ -837,10 +842,22 @@
             event.preventDefault();
             const name = document.getElementById('visitor-name').value.trim();
             const phone = document.getElementById('visitor-phone').value.trim();
+            
             if (name && phone) {
+                // Check if user credentials match the Admin profile
+                if (name.toLowerCase() === ADMIN_NAME.toLowerCase() && phone === ADMIN_PHONE) {
+                    localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone, isAdmin: true }));
+                    document.getElementById('login-modal').style.display = 'none';
+                    activateAdminMode();
+                    alert("Welcome Admin! Successfully recognized and redirected to the admin console.");
+                    window.location.hash = "#catalog";
+                    return;
+                }
+
+                // Regular User Login Flow
                 const dateRegistered = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                 
-                localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone }));
+                localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone, isAdmin: false }));
                 
                 let users = getRegisteredUsers();
                 if (!users.some(u => u.phone === phone)) {
@@ -862,15 +879,56 @@
             if (user) {
                 document.getElementById('login-modal').style.display = 'none';
                 const parsed = JSON.parse(user);
-                document.getElementById('client-name').value = parsed.name;
-                document.getElementById('client-phone').value = parsed.phone;
+                
+                if (parsed.isAdmin) {
+                    activateAdminMode();
+                } else {
+                    document.getElementById('client-name').value = parsed.name;
+                    document.getElementById('client-phone').value = parsed.phone;
+                }
             } else {
                 document.getElementById('login-modal').style.display = 'flex';
             }
         }
 
+        function activateAdminMode() {
+            const panels = ['admin-panel-catalog', 'admin-panel-users', 'admin-panel-qrs', 'admin-panel-tracker', 'admin-panel-contact'];
+            panels.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('active');
+            });
+            const root = document.getElementById('body-root');
+            if (root) root.classList.add('admin-mode');
+            const toggleBtn = document.getElementById('admin-toggle-btn-ui');
+            if (toggleBtn) toggleBtn.style.display = 'inline-block';
+            renderRegisteredUsers();
+            renderTracker();
+        }
+
+        function toggleAdminPanel() {
+            const panels = ['admin-panel-catalog', 'admin-panel-users', 'admin-panel-qrs', 'admin-panel-tracker', 'admin-panel-contact'];
+            const firstPanel = document.getElementById('admin-panel-catalog');
+            const isActive = firstPanel ? firstPanel.classList.contains('active') : false;
+            
+            panels.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (isActive) {
+                        el.classList.remove('active');
+                    } else {
+                        el.classList.add('active');
+                    }
+                }
+            });
+            if (!isActive) {
+                renderRegisteredUsers();
+                renderTracker();
+            }
+        }
+
         function renderRegisteredUsers() {
             const tbody = document.getElementById('registered-users-table-body');
+            if (!tbody) return;
             const users = getRegisteredUsers();
 
             if (users.length === 0) {
@@ -910,6 +968,7 @@
 
         function renderCatalog() {
             const grid = document.getElementById('catalog-grid');
+            if (!grid) return;
             let gowns = getGowns();
 
             if (gowns.length === 0) {
@@ -952,6 +1011,7 @@
 
         function slideMedia(gownId, direction) {
             const card = document.getElementById(`card-${gownId}`);
+            if (!card) return;
             const container = card.querySelector('.carousel-container');
             const track = document.getElementById(`track-${gownId}`);
             let currentIndex = parseInt(container.getAttribute('data-index'));
@@ -999,6 +1059,7 @@
         function renderCart() {
             const tbody = document.getElementById('cart-items-body');
             const totalDisplay = document.getElementById('cart-total-display');
+            if (!tbody || !totalDisplay) return;
 
             if (cart.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Your cart is empty. Add a dress from the catalog above!</td></tr>`;
@@ -1072,13 +1133,14 @@
         function loadQRs() {
             const gcashQR = localStorage.getItem('sf_qr_gcash');
             const mayaQR = localStorage.getItem('sf_qr_maya');
-            if (gcashQR) document.getElementById('admin-gcash-preview').src = gcashQR;
-            if (mayaQR) document.getElementById('admin-maya-preview').src = mayaQR;
+            if (gcashQR && document.getElementById('admin-gcash-preview')) document.getElementById('admin-gcash-preview').src = gcashQR;
+            if (mayaQR && document.getElementById('admin-maya-preview')) document.getElementById('admin-maya-preview').src = mayaQR;
             handlePaymentChange();
         }
 
         function renderTracker() {
             const tbody = document.getElementById('tracker-table-body');
+            if (!tbody) return;
             const inquiries = getInquiries();
 
             if (inquiries.length === 0) {
@@ -1112,31 +1174,13 @@
                 phone: "09954836767"
             };
 
-            document.getElementById('footer-web').textContent = contactInfo.web;
-            document.getElementById('footer-email').textContent = contactInfo.email;
-            document.getElementById('footer-phone').textContent = contactInfo.phone;
+            if (document.getElementById('footer-web')) document.getElementById('footer-web').textContent = contactInfo.web;
+            if (document.getElementById('footer-email')) document.getElementById('footer-email').textContent = contactInfo.email;
+            if (document.getElementById('footer-phone')) document.getElementById('footer-phone').textContent = contactInfo.phone;
 
-            document.getElementById('admin-web').value = contactInfo.web;
-            document.getElementById('admin-email').value = contactInfo.email;
-            document.getElementById('admin-phone').value = contactInfo.phone;
-        }
-
-        function toggleAdminPanel() {
-            const user = prompt("Enter Admin Username:");
-            if (user === "SimplyFab") {
-                const pin = prompt("Enter Admin Password:");
-                if (pin === "021910") {
-                    const panels = ['admin-panel-catalog', 'admin-panel-users', 'admin-panel-qrs', 'admin-panel-tracker', 'admin-panel-contact'];
-                    panels.forEach(id => document.getElementById(id).classList.toggle('active'));
-                    document.getElementById('body-root').classList.toggle('admin-mode');
-                    renderRegisteredUsers();
-                    alert("Admin mode unlocked successfully!");
-                } else if (pin !== null) {
-                    alert("Incorrect password.");
-                }
-            } else if (user !== null) {
-                alert("Incorrect username.");
-            }
+            if (document.getElementById('admin-web')) document.getElementById('admin-web').value = contactInfo.web;
+            if (document.getElementById('admin-email')) document.getElementById('admin-email').value = contactInfo.email;
+            if (document.getElementById('admin-phone')) document.getElementById('admin-phone').value = contactInfo.phone;
         }
 
         function handleAddNewGown(event) {
@@ -1145,7 +1189,6 @@
             const desc = document.getElementById('new-desc').value;
             const priceVndInput = parseFloat(document.getElementById('new-price-vnd').value) || 0;
             
-            // Automatic conversion calculation based on 800 VND = 2 PHP ratio
             const pricePhp = (priceVndInput * VND_TO_PHP_RATIO).toFixed(2);
 
             const fileInput = document.getElementById('new-imgs');
@@ -1281,6 +1324,7 @@
         }
 
         // Initialize state on load
+        localStorage.removeItem('sf_logged_user'); // Clears old session to ensure the login popup displays reliably on refresh
         checkVisitorSession();
         renderCatalog();
         renderCart();
