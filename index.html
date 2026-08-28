@@ -870,7 +870,7 @@
         <!-- Admin Duplicate Clean-up Panel -->
         <div id="admin-panel-duplicates" class="admin-panel" style="border-left-color: #d9534f;">
             <h3>🧹 Admin Panel: Duplicate & Clean-up Filter</h3>
-            <p style="font-size: 13px; color: #666; margin-top:0;">Scan and instantly purge corrupted, accidental duplicate items, or orphaned records from Firebase.</p>
+            <p style="font-size: 13px; color: #666; margin-top:0;">Scan and instantly purge corrupted, accidental duplicate items, or orphaned records from Firebase/Storage.</p>
             <button type="button" id="purge-duplicates-btn" class="btn-export" style="background-color: #d9534f;">🔍 Scan & Clean Duplicates Now</button>
         </div>
 
@@ -988,8 +988,16 @@
             measurementId: "G-9SW6XLGR6P"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        let db = null;
+        let isFirestoreHealthy = true;
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+        } catch (err) {
+            console.warn("Aggressive Fallback: Firebase initialization failed, running local memory mode.", err);
+            isFirestoreHealthy = false;
+        }
 
         const VND_TO_PHP_RATIO = 2 / 800;
         const ADMIN_MARKUP = 700;
@@ -1043,7 +1051,21 @@
         ];
 
         let cart = [];
-        let liveGownsCatalog = [];
+        let liveGownsCatalog = (() => {
+            const localFallback = localStorage.getItem('sf_local_catalog_backup');
+            if (localFallback) {
+                try { return JSON.parse(localFallback); } catch (e) { return defaultGowns; }
+            }
+            return defaultGowns;
+        })();
+
+        function persistLocalCatalog() {
+            try {
+                localStorage.setItem('sf_local_catalog_backup', JSON.stringify(liveGownsCatalog));
+            } catch (e) {
+                console.warn("Local storage quota exceeded or restricted.");
+            }
+        }
 
         function calculatePhpPrice(vnd) {
             const baseVnd = parseFloat(vnd) || 0;
@@ -1101,8 +1123,7 @@
                 return;
             }
 
-            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
-            const gown = gowns.find(g => String(g.id) === String(id));
+            const gown = liveGownsCatalog.find(g => String(g.id) === String(id));
             if (!gown) return;
 
             let likes = gown.likes || [];
@@ -1115,13 +1136,16 @@
             }
 
             gown.likes = likes;
+            persistLocalCatalog();
             renderCatalog();
 
-            try {
-                const gownRef = doc(db, "gowns_catalog", String(id));
-                await setDoc(gownRef, { likes }, { merge: true });
-            } catch (e) {
-                console.warn("Firestore sync warning on like: ", e);
+            if (db && isFirestoreHealthy) {
+                try {
+                    const gownRef = doc(db, "gowns_catalog", String(id));
+                    await setDoc(gownRef, { likes }, { merge: true });
+                } catch (e) {
+                    console.warn("Firestore offline warning on like:", e);
+                }
             }
         };
 
@@ -1137,8 +1161,7 @@
             const commentText = inputField.value.trim();
             if (!commentText) return;
 
-            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
-            const gown = gowns.find(g => String(g.id) === String(id));
+            const gown = liveGownsCatalog.find(g => String(g.id) === String(id));
             if (!gown) return;
 
             let comments = gown.comments || [];
@@ -1151,32 +1174,37 @@
 
             gown.comments = comments;
             inputField.value = "";
+            persistLocalCatalog();
             renderCatalog();
 
-            try {
-                const gownRef = doc(db, "gowns_catalog", String(id));
-                await setDoc(gownRef, { comments }, { merge: true });
-            } catch (e) {
-                console.warn("Firestore sync warning on comment: ", e);
+            if (db && isFirestoreHealthy) {
+                try {
+                    const gownRef = doc(db, "gowns_catalog", String(id));
+                    await setDoc(gownRef, { comments }, { merge: true });
+                } catch (e) {
+                    console.warn("Firestore offline warning on comment:", e);
+                }
             }
         };
 
         window.deleteComment = async function(gownId, commentTimestamp) {
             if (!confirm("Admin: Are you sure you want to delete this comment?")) return;
 
-            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
-            const gown = gowns.find(g => String(g.id) === String(gownId));
+            const gown = liveGownsCatalog.find(g => String(g.id) === String(gownId));
             if (!gown) return;
 
             let comments = (gown.comments || []).filter(c => c.id !== commentTimestamp);
             gown.comments = comments;
+            persistLocalCatalog();
             renderCatalog();
 
-            try {
-                const gownRef = doc(db, "gowns_catalog", String(gownId));
-                await setDoc(gownRef, { comments }, { merge: true });
-            } catch (e) {
-                console.warn("Firestore sync warning on delete comment: ", e);
+            if (db && isFirestoreHealthy) {
+                try {
+                    const gownRef = doc(db, "gowns_catalog", String(gownId));
+                    await setDoc(gownRef, { comments }, { merge: true });
+                } catch (e) {
+                    console.warn("Firestore offline warning on delete comment:", e);
+                }
             }
         };
 
@@ -1312,28 +1340,42 @@
         }
 
         window.scanAndPurgeDuplicates = async function() {
-            if (!confirm("Admin: Run duplicate item and corruption scan? This will clean up stray documents and synchronize IDs.")) return;
-            try {
-                const querySnapshot = await getDocs(collection(db, "gowns_catalog"));
-                let seenIds = new Set();
-                let purgedCount = 0;
+            if (!confirm("Admin: Run aggressive duplicate and corruption scan? This will clean local/remote records and remove broken or unnamed items.")) return;
+            
+            let uniqueMap = new Map();
+            let purgedCount = 0;
 
-                for (const documentSnapshot of querySnapshot.docs) {
-                    const docId = documentSnapshot.id;
-                    const data = documentSnapshot.data();
-
-                    if (!data || !data.name || data.name === "undefined" || seenIds.has(docId)) {
-                        await deleteDoc(doc(db, "gowns_catalog", docId));
-                        purgedCount++;
-                    } else {
-                        seenIds.add(docId);
-                    }
+            liveGownsCatalog.forEach(g => {
+                if (g && g.id && g.name && g.name !== "undefined" && !uniqueMap.has(g.id)) {
+                    uniqueMap.set(g.id, g);
+                } else {
+                    purgedCount++;
                 }
-                alert(`Scan complete! Successfully purged ${purgedCount} corrupt or duplicate records.`);
-            } catch (err) {
-                console.error("Error purging duplicates:", err);
-                alert("Failed to complete scan. Check console log.");
+            });
+            liveGownsCatalog = Array.from(uniqueMap.values());
+            persistLocalCatalog();
+            renderCatalog();
+
+            if (db && isFirestoreHealthy) {
+                try {
+                    const querySnapshot = await getDocs(collection(db, "gowns_catalog"));
+                    let remoteSeenIds = new Set();
+                    for (const documentSnapshot of querySnapshot.docs) {
+                        const docId = documentSnapshot.id;
+                        const data = documentSnapshot.data();
+                        if (!data || !data.name || data.name === "undefined" || remoteSeenIds.has(docId)) {
+                            await deleteDoc(doc(db, "gowns_catalog", docId));
+                            purgedCount++;
+                        } else {
+                            remoteSeenIds.add(docId);
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Remote duplicate purge warning:", err);
+                }
             }
+
+            alert(`Aggressive scan complete! Purged ${purgedCount} duplicate/corrupt items.`);
         };
 
         const purgeDuplicatesBtn = document.getElementById('purge-duplicates-btn');
@@ -1417,8 +1459,11 @@
                 let vndValue = getNormalizedVnd(gown);
                 let userPhpPrice = calculatePhpPrice(vndValue);
 
-                const images = gown.images || [gown.img] || [];
-                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom design">`).join('');
+                const images = (gown.images && gown.images.length > 0) ? gown.images : [
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
+                ];
+
+                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom design" onerror="this.src='https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80'">`).join('');
                 if (gown.video) {
                     mediaHtml += `<video src="${gown.video}" controls muted></video>`;
                 }
@@ -1690,17 +1735,20 @@
 
                 currentList.push(newGown);
                 liveGownsCatalog = currentList;
+                persistLocalCatalog();
                 renderCatalog();
 
                 event.target.reset();
                 previewPhpConversion();
                 alert(`New dress published successfully with ID ${customId}!`);
 
-                try {
-                    const gownRef = doc(db, "gowns_catalog", String(customId));
-                    await setDoc(gownRef, newGown);
-                } catch (e) {
-                    console.warn("Cloud sync queued in offline mode: ", e);
+                if (db && isFirestoreHealthy) {
+                    try {
+                        const gownRef = doc(db, "gowns_catalog", String(customId));
+                        await setDoc(gownRef, newGown, { merge: true });
+                    } catch (e) {
+                        console.warn("Cloud sync queued in offline mode: ", e);
+                    }
                 }
             }
 
@@ -1749,38 +1797,35 @@
                 return;
             }
 
-            let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
-            const gown = gowns.find(g => String(g.id) === String(id));
+            const gown = liveGownsCatalog.find(g => String(g.id) === String(id));
             if (!gown) return;
 
-            // Preserve existing images and metadata so they are never wiped or broken when updating price/name
+            // Aggressively lock down and preserve all images and sub-properties
             gown.name = newName;
             gown.priceVnd = newVnd;
+            if (!gown.images || gown.images.length === 0) {
+                gown.images = ["https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"];
+            }
+
+            persistLocalCatalog();
             renderCatalog();
 
             alert(`Item ${id} successfully updated!`);
 
-            try {
-                const gownRef = doc(db, "gowns_catalog", String(id));
-                await updateDoc(gownRef, { 
-                    name: newName, 
-                    priceVnd: newVnd 
-                });
-            } catch (e) {
-                console.warn("Cloud sync update warning, attempting fallback setDoc: ", e);
+            if (db && isFirestoreHealthy) {
                 try {
                     const gownRef = doc(db, "gowns_catalog", String(id));
                     await setDoc(gownRef, {
                         name: newName,
                         priceVnd: newVnd,
                         desc: gown.desc || "",
-                        images: gown.images || [],
+                        images: gown.images,
                         video: gown.video || "",
                         likes: gown.likes || [],
                         comments: gown.comments || []
                     }, { merge: true });
-                } catch (err2) {
-                    console.error("Fallback update failed:", err2);
+                } catch (e) {
+                    console.warn("Cloud sync update fallback active:", e);
                 }
             }
         };
@@ -1850,21 +1895,27 @@
 
         window.deleteGown = async function(id) {
             if (confirm("Remove this dress from catalog?")) {
-                let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
-                gowns = gowns.filter(g => String(g.id) !== String(id));
-                liveGownsCatalog = gowns;
+                liveGownsCatalog = liveGownsCatalog.filter(g => String(g.id) !== String(id));
+                persistLocalCatalog();
                 renderCatalog();
                 alert("Dress removed successfully!");
 
-                try {
-                    await deleteDoc(doc(db, "gowns_catalog", String(id)));
-                } catch (e) {
-                    console.warn("Cloud delete warning: ", e);
+                if (db && isFirestoreHealthy) {
+                    try {
+                        await deleteDoc(doc(db, "gowns_catalog", String(id)));
+                    } catch (e) {
+                        console.warn("Cloud delete warning: ", e);
+                    }
                 }
             }
         };
 
         async function initRealtimeCatalog() {
+            if (!db || !isFirestoreHealthy) {
+                renderCatalog();
+                return;
+            }
+
             for (const defaultGown of defaultGowns) {
                 try {
                     const ref = doc(db, "gowns_catalog", defaultGown.id);
@@ -1885,25 +1936,19 @@
                 
                 if (gowns.length > 0) {
                     liveGownsCatalog = gowns;
+                    persistLocalCatalog();
                     renderCatalog();
                 }
             }, (error) => {
-                console.warn("Firestore snapshot offline fallback active. Loading default catalog.", error);
-                if (liveGownsCatalog.length === 0) {
-                    liveGownsCatalog = defaultGowns;
-                    renderCatalog();
-                }
+                console.warn("Firestore snapshot offline/blocked mode active. Using aggressive local cache.", error);
+                isFirestoreHealthy = false;
+                renderCatalog();
             });
         }
 
         checkVisitorSession();
         initRealtimeCatalog();
-        
-        if (liveGownsCatalog.length === 0) {
-            liveGownsCatalog = defaultGowns;
-            renderCatalog();
-        }
-
+        renderCatalog();
         renderCart();
         loadContactInfo();
     </script>
