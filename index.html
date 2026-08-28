@@ -334,7 +334,7 @@
         }
 
         .btn-export:hover {
-            background-color: var(--primary-dark);
+            background-color: #9d6b76;
         }
 
         /* Catalog Grid & Media Display */
@@ -558,7 +558,7 @@
         }
 
         .btn-comment:hover {
-            background-color: var(--primary-dark);
+            background-color: #9d6b76;
         }
 
         /* Admin Quick Price & Name Edit Box inside Card */
@@ -611,7 +611,7 @@
         }
 
         .btn-save-inline-price:hover {
-            background-color: var(--primary-dark);
+            background-color: #9d6b76;
         }
 
         .btn-cart {
@@ -628,7 +628,7 @@
         }
 
         .btn-cart:hover {
-            background-color: var(--primary-dark);
+            background-color: #9d6b76;
         }
 
         .btn-delete-item {
@@ -853,24 +853,24 @@
             <form onsubmit="handleAddNewGown(event)">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>Dress Name / Label:</label>
+                        <label for="new-name">Dress Name / Label:</label>
                         <input type="text" id="new-name" class="form-control" placeholder="e.g., The Aria Ballgown" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>Description:</label>
+                        <label for="new-desc">Description:</label>
                         <input type="text" id="new-desc" class="form-control" placeholder="Short description" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>Price in VND (₫):</label>
+                        <label for="new-price-vnd">Price in VND (₫):</label>
                         <input type="number" id="new-price-vnd" class="form-control" placeholder="e.g., 800000" step="1" oninput="previewPhpConversion()" required>
                         <small style="color: var(--primary); font-size: 11px; font-weight: bold;" id="vnd-conversion-preview">User Price: ₱0.00 PHP (Incl. +₱700 markup)</small>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>Upload Pictures (3+):</label>
+                        <label for="new-imgs">Upload Pictures (3+):</label>
                         <input type="file" id="new-imgs" class="form-control" accept="image/*" multiple required style="padding: 6px;">
                     </div>
                     <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
-                        <label>Upload Product Video (Optional):</label>
+                        <label for="new-video">Upload Product Video (Optional):</label>
                         <input type="file" id="new-video" class="form-control" accept="video/*" style="padding: 6px;">
                     </div>
                     <button type="submit" class="btn-submit" style="margin-top:0; height: 40px; background-color: var(--primary);">Publish Dress</button>
@@ -908,15 +908,15 @@
             <form onsubmit="handleUpdateContact(event)">
                 <div class="admin-contact-grid">
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>Website Address/URL:</label>
+                        <label for="admin-web">Website Address/URL:</label>
                         <input type="text" id="admin-web" class="form-control" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>Email Address:</label>
+                        <label for="admin-email">Email Address:</label>
                         <input type="email" id="admin-email" class="form-control" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>Phone Number:</label>
+                        <label for="admin-phone">Phone Number:</label>
                         <input type="text" id="admin-phone" class="form-control" required>
                     </div>
                     <button type="submit" class="btn-submit" style="margin-top:0; height: 40px; background-color: var(--primary);">Save Details</button>
@@ -1128,7 +1128,7 @@
 
             try {
                 const gownRef = doc(db, "gowns_catalog", String(id));
-                await updateDoc(gownRef, { likes });
+                await setDoc(gownRef, { likes }, { merge: true });
             } catch (e) {
                 console.warn("Firestore sync warning on like: ", e);
             }
@@ -1164,7 +1164,7 @@
 
             try {
                 const gownRef = doc(db, "gowns_catalog", String(id));
-                await updateDoc(gownRef, { comments });
+                await setDoc(gownRef, { comments }, { merge: true });
             } catch (e) {
                 console.warn("Firestore sync warning on comment: ", e);
             }
@@ -1183,7 +1183,7 @@
 
             try {
                 const gownRef = doc(db, "gowns_catalog", String(gownId));
-                await updateDoc(gownRef, { comments });
+                await setDoc(gownRef, { comments }, { merge: true });
             } catch (e) {
                 console.warn("Firestore sync warning on delete comment: ", e);
             }
@@ -1301,7 +1301,6 @@
             }
         }
 
-        // Automatic and Manual Duplicate / Orphan Filter Scanner
         window.scanAndPurgeDuplicates = async function() {
             if (!confirm("Admin: Run duplicate item and corruption scan? This will clean up stray documents and synchronize IDs.")) return;
             try {
@@ -1313,7 +1312,6 @@
                     const docId = documentSnapshot.id;
                     const data = documentSnapshot.data();
 
-                    // Check if record is corrupt/unnamed or an accidental duplicate key
                     if (!data || !data.name || data.name === "undefined" || seenIds.has(docId)) {
                         await deleteDoc(doc(db, "gowns_catalog", docId));
                         purgedCount++;
@@ -1374,7 +1372,6 @@
             
             let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             
-            // Strictly filter out any invalid/unnamed or duplicate ID items in memory view
             let uniqueMap = new Map();
             gowns.forEach(g => {
                 if (g && g.id && g.name && g.name !== "undefined") {
@@ -1444,11 +1441,11 @@
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
                             <div class="admin-price-box">
-                                <label>Edit Dress Name:</label>
+                                <label for="name-input-${itemId}">Edit Dress Name:</label>
                                 <div class="admin-price-input-group">
                                     <input type="text" id="name-input-${itemId}" value="${gown.name}">
                                 </div>
-                                <label>Edit Price in VND (₫):</label>
+                                <label for="vnd-input-${itemId}">Edit Price in VND (₫):</label>
                                 <div class="admin-price-input-group">
                                     <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}" step="1">
                                 </div>
@@ -1732,10 +1729,11 @@
 
             try {
                 const gownRef = doc(db, "gowns_catalog", String(id));
-                await updateDoc(gownRef, { 
+                // Use setDoc with merge:true so it updates safely whether the document already exists remotely or needs initialization
+                await setDoc(gownRef, { 
                     name: newName, 
                     priceVnd: newVnd 
-                });
+                }, { merge: true });
             } catch (e) {
                 console.warn("Cloud sync update warning: ", e);
             }
