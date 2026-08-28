@@ -714,6 +714,7 @@
 </head>
 <body id="body-root">
 
+    <!-- Login Modal Pop-up on Visit -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
@@ -732,6 +733,7 @@
         </div>
     </div>
 
+    <!-- Floating Facebook Messenger Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">
         💬
     </a>
@@ -854,6 +856,7 @@
                 Total Estimated Amount: ₱<span id="cart-total-display">0.00</span>
             </div>
 
+            <!-- Itemized Summary Box -->
             <div class="checkout-summary-box">
                 <h4>📦 Liked Items Summary</h4>
                 <div id="checkout-itemized-list">
@@ -883,7 +886,7 @@
 
     <footer id="contact">
         <p><strong>SimplyFab Dress Catalogue</strong></p>
-        <p>Website: <span id="footer-web">SimplyFab.com</span> | Email: <span id="footer-email">emp3r0r01+simplyfab20@gmail.com</span> | Phone: <span id="footer-phone">09954836767</span></p>
+        <p>Website: <span id="footer-web">SimplyFab.com</span> | Email: <span id="footer-email">tin23_angela@gmail.com</span> | Phone: <span id="footer-phone">09954836767</span></p>
         <p style="margin-top: 15px; font-size: 11px; color: #aaa;">&copy; 2026 SimplyFab Dress Catalogue. All rights reserved.</p>
     </footer>
 
@@ -907,7 +910,7 @@
         const VND_TO_PHP_RATIO = 2 / 800;
         const ADMIN_NAME = "SimplyFab";
         const ADMIN_PHONE = "021910";
-        const COMPANY_EMAIL = "emp3r0r01+simplyfab20@gmail.com";
+        const COMPANY_EMAIL = "tin23_angela@gmail.com";
 
         const defaultGowns = [
             {
@@ -1257,6 +1260,7 @@
                             <p>${gown.desc}</p>
                             <div class="price">₱<span id="card-price-${gown.id}">${parseFloat(gown.price).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div>
                             
+                            <!-- Inline Admin Name & Price Edit Box -->
                             <div class="admin-price-box">
                                 <label>Edit Dress Label / Name:</label>
                                 <div class="admin-price-input-group">
@@ -1272,6 +1276,7 @@
                             <button class="btn-cart" onclick="addToCart('${gown.id}')">Add to Liked Items 🛍️</button>
                         </div>
 
+                        <!-- Comments Section with Admin Delete Option -->
                         <div class="comments-section">
                             <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 6px;">💬 Customer Comments (${comments.length})</div>
                             <div class="comments-list">
