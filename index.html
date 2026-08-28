@@ -1041,7 +1041,6 @@
         let cart = [];
         let liveGownsCatalog = [];
 
-        // Clear out corrupt/oversized storage quota on boot
         try {
             localStorage.removeItem('sf_local_fallback_gowns');
         } catch(e) {}
@@ -1613,7 +1612,7 @@
             }
 
             files.forEach((file, index) => {
-                resizeImage(file, 500, 500, 0.5, function(compressedDataUrl) {
+                resizeImage(file, 400, 400, 0.4, function(compressedDataUrl) {
                     loadedImages[index] = compressedDataUrl;
                     processedImages++;
                     checkCompletion();
