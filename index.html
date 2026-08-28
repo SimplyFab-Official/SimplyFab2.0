@@ -972,7 +972,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, setDoc, onSnapshot, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, setDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA5JeXosMT6e5xYcDTJNdPKPjKF5tRcf5Y",
@@ -1041,27 +1041,19 @@
         let cart = [];
         let liveGownsCatalog = [];
 
+        // Clear out corrupt/oversized storage quota on boot
+        try {
+            localStorage.removeItem('sf_local_fallback_gowns');
+        } catch(e) {}
+
         function getRegisteredUsers() {
             const saved = localStorage.getItem('sf_registered_users');
             return saved ? JSON.parse(saved) : [];
         }
 
-        function getLocalBackupGowns() {
-            const saved = localStorage.getItem('sf_local_fallback_gowns');
-            return saved ? JSON.parse(saved) : [];
-        }
-
-        function saveLocalBackupGowns(gownsList) {
-            try {
-                localStorage.setItem('sf_local_fallback_gowns', JSON.stringify(gownsList));
-            } catch (e) {
-                console.warn("LocalStorage quota exceeded. Skipping local backup caching to prevent crash.", e);
-            }
-        }
-
         function updateLaunchMetrics() {
             const usersCount = getRegisteredUsers().length;
-            const currentGowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : (getLocalBackupGowns().length > 0 ? getLocalBackupGowns() : defaultGowns);
+            const currentGowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const dressesCount = currentGowns.length;
             
             const metricUsersEl = document.getElementById('metric-total-users');
@@ -1094,7 +1086,7 @@
                 return;
             }
 
-            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : (getLocalBackupGowns().length > 0 ? getLocalBackupGowns() : defaultGowns);
+            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const gown = gowns.find(g => String(g.id) === String(id));
             if (!gown) return;
 
@@ -1108,7 +1100,6 @@
             }
 
             gown.likes = likes;
-            saveLocalBackupGowns(gowns);
             renderCatalog();
 
             try {
@@ -1131,7 +1122,7 @@
             const commentText = inputField.value.trim();
             if (!commentText) return;
 
-            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : (getLocalBackupGowns().length > 0 ? getLocalBackupGowns() : defaultGowns);
+            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const gown = gowns.find(g => String(g.id) === String(id));
             if (!gown) return;
 
@@ -1145,7 +1136,6 @@
 
             gown.comments = comments;
             inputField.value = "";
-            saveLocalBackupGowns(gowns);
             renderCatalog();
 
             try {
@@ -1159,13 +1149,12 @@
         window.deleteComment = async function(gownId, commentTimestamp) {
             if (!confirm("Admin: Are you sure you want to delete this comment?")) return;
 
-            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : (getLocalBackupGowns().length > 0 ? getLocalBackupGowns() : defaultGowns);
+            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const gown = gowns.find(g => String(g.id) === String(gownId));
             if (!gown) return;
 
             let comments = (gown.comments || []).filter(c => c.id !== commentTimestamp);
             gown.comments = comments;
-            saveLocalBackupGowns(gowns);
             renderCatalog();
 
             try {
@@ -1321,7 +1310,7 @@
             const grid = document.getElementById('catalog-grid');
             if (!grid) return;
             
-            let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : (getLocalBackupGowns().length > 0 ? getLocalBackupGowns() : defaultGowns);
+            let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
 
             const currentUser = JSON.parse(localStorage.getItem('sf_logged_user'));
 
@@ -1430,7 +1419,7 @@
         }
 
         window.addToCart = function(id) {
-            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : (getLocalBackupGowns().length > 0 ? getLocalBackupGowns() : defaultGowns);
+            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const gown = gowns.find(g => String(g.id) === String(id));
             if (!gown) return;
             const existing = cart.find(item => String(item.id) === String(id));
@@ -1567,7 +1556,7 @@
             const priceVndInput = parseFloat(document.getElementById('new-price-vnd').value) || 0;
             const pricePhp = ((priceVndInput * VND_TO_PHP_RATIO) + ADMIN_MARKUP).toFixed(2);
             
-            const currentList = liveGownsCatalog.length > 0 ? liveGownsCatalog : (getLocalBackupGowns().length > 0 ? getLocalBackupGowns() : defaultGowns);
+            const currentList = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const customId = `ITEM-00${currentList.length + 1}`;
 
             const fileInput = document.getElementById('new-imgs');
@@ -1598,7 +1587,6 @@
 
                 currentList.push(newGown);
                 liveGownsCatalog = currentList;
-                saveLocalBackupGowns(liveGownsCatalog);
                 renderCatalog();
 
                 event.target.reset();
@@ -1625,7 +1613,7 @@
             }
 
             files.forEach((file, index) => {
-                resizeImage(file, 600, 600, 0.6, function(compressedDataUrl) {
+                resizeImage(file, 500, 500, 0.5, function(compressedDataUrl) {
                     loadedImages[index] = compressedDataUrl;
                     processedImages++;
                     checkCompletion();
@@ -1655,12 +1643,11 @@
 
             const formattedPrice = newPriceValue.toFixed(2);
             
-            let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : (getLocalBackupGowns().length > 0 ? getLocalBackupGowns() : defaultGowns);
+            let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const gown = gowns.find(g => String(g.id) === String(id));
             if (gown) {
                 gown.name = newName;
                 gown.price = formattedPrice;
-                saveLocalBackupGowns(gowns);
                 renderCatalog();
             }
 
@@ -1712,10 +1699,9 @@
 
         window.deleteGown = async function(id) {
             if (confirm("Remove this dress from catalog?")) {
-                let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : getLocalBackupGowns();
+                let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
                 gowns = gowns.filter(g => String(g.id) !== String(id));
                 liveGownsCatalog = gowns;
-                saveLocalBackupGowns(liveGownsCatalog);
                 renderCatalog();
                 alert("Dress removed successfully!");
 
@@ -1736,14 +1722,12 @@
                 
                 if (gowns.length > 0) {
                     liveGownsCatalog = gowns;
-                    saveLocalBackupGowns(gowns);
                     renderCatalog();
                 }
             }, (error) => {
-                console.warn("Firestore snapshot offline fallback active. Loading local backup catalog.", error);
-                const localBackup = getLocalBackupGowns();
-                if (localBackup.length > 0) {
-                    liveGownsCatalog = localBackup;
+                console.warn("Firestore snapshot offline fallback active. Loading default catalog.", error);
+                if (liveGownsCatalog.length === 0) {
+                    liveGownsCatalog = defaultGowns;
                     renderCatalog();
                 }
             });
@@ -1752,8 +1736,8 @@
         checkVisitorSession();
         initRealtimeCatalog();
         
-        if (liveGownsCatalog.length === 0 && getLocalBackupGowns().length > 0) {
-            liveGownsCatalog = getLocalBackupGowns();
+        if (liveGownsCatalog.length === 0) {
+            liveGownsCatalog = defaultGowns;
             renderCatalog();
         }
 
