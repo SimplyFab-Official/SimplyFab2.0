@@ -59,6 +59,33 @@
             margin-bottom: 20px;
         }
 
+        /* Image Lightbox Modal */
+        .image-lightbox-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            cursor: zoom-out;
+        }
+
+        .image-lightbox-overlay.active {
+            display: flex;
+        }
+
+        .image-lightbox-overlay img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 6px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+            object-fit: contain;
+        }
+
         /* Floating Facebook Messenger Bubble */
         .messenger-bubble {
             position: fixed;
@@ -220,6 +247,37 @@
             font-size: 18px;
         }
 
+        /* Launch Progress Metric Counter Grid */
+        .launch-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: #fdf6f6;
+            border: 1px solid var(--accent);
+            padding: 18px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .metric-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+        }
+
         .admin-form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px;
@@ -362,6 +420,7 @@
             height: 100%;
             object-fit: cover;
             flex-shrink: 0;
+            cursor: zoom-in;
         }
 
         .carousel-btn {
@@ -714,7 +773,10 @@
 </head>
 <body id="body-root">
 
-    <!-- Login Modal Pop-up on Visit -->
+    <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" alt="Enlarged Dress Design">
+    </div>
+
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
@@ -733,7 +795,6 @@
         </div>
     </div>
 
-    <!-- Floating Facebook Messenger Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">
         💬
     </a>
@@ -760,8 +821,23 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
+        <div id="admin-panel-metrics" class="admin-panel">
+            <h3>🚀 App Launch Progress: Registration Tracker</h3>
+            <p style="font-size: 13px; color: #666; margin-top:0;">Track user registration growth as you prepare for the official launch.</p>
+            <div class="launch-metrics-grid">
+                <div class="metric-card">
+                    <h4>Total Registered Users</h4>
+                    <p class="metric-value" id="metric-total-users">0</p>
+                </div>
+                <div class="metric-card">
+                    <h4>Published Dresses in Catalog</h4>
+                    <p class="metric-value" id="metric-total-dresses">0</p>
+                </div>
+            </div>
+        </div>
+
         <div id="admin-panel-catalog" class="admin-panel">
-            <h3>⚙️ Admin Panel: Add New Dress Item (Price in VND -> Auto Converts to PHP)</h3>
+            <h3>⚙️ Admin Panel: Add New Dress Item (Price in VND -> Auto Converts + ₱700 Markup)</h3>
             <form onsubmit="handleAddNewGown(event)">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
@@ -775,7 +851,7 @@
                     <div class="form-group" style="margin-bottom:0;">
                         <label>Price in VND (₫):</label>
                         <input type="number" id="new-price-vnd" class="form-control" placeholder="e.g., 800000" step="1" oninput="previewPhpConversion()" required>
-                        <small style="color: var(--primary); font-size: 11px; font-weight: bold;" id="vnd-conversion-preview">Equivalent: ₱0.00 PHP (Rate: 800 VND = 2 PHP)</small>
+                        <small style="color: var(--primary); font-size: 11px; font-weight: bold;" id="vnd-conversion-preview">Equivalent: ₱0.00 PHP (Incl. Admin +₱700 markup)</small>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label>Upload Pictures (3+):</label>
@@ -791,7 +867,7 @@
         </div>
 
         <div id="admin-panel-users" class="admin-panel">
-            <h3>👥 Admin Panel: Registered Visitors</h3>
+            <h3>👥 Admin Panel: Registered Visitors List</h3>
             <p style="font-size: 13px; color: #666; margin-top:0;">View all visitors who registered upon visiting the website.</p>
             <div style="overflow-x: auto;">
                 <table class="tracker-table">
@@ -803,7 +879,7 @@
                         </tr>
                     </thead>
                     <tbody id="registered-users-table-body">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
             <button type="button" class="btn-export" onclick="exportRegisteredUsersCSV()">📥 Export Users to CSV</button>
@@ -831,7 +907,7 @@
         </div>
 
         <div class="catalog-grid" id="catalog-grid">
-            </div>
+        </div>
     </div>
 
     <div id="cart-checkout" class="container">
@@ -856,7 +932,6 @@
                 Total Estimated Amount: ₱<span id="cart-total-display">0.00</span>
             </div>
 
-            <!-- Itemized Summary Box -->
             <div class="checkout-summary-box">
                 <h4>📦 Liked Items Summary</h4>
                 <div id="checkout-itemized-list">
@@ -892,7 +967,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDb, updateDoc, enableIndexedDbPersistence, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA5JeXosMT6e5xYcDTJNdPKPjKF5tRcf5Y",
@@ -907,7 +982,17 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Enable offline persistence to handle connection timeouts gracefully and keep items cached
+        enableIndexedDbPersistence(db).catch((err) => {
+            if (err.code == 'failed-precondition') {
+                console.warn("Firestore persistence failed: Multiple tabs open.");
+            } else if (err.code == 'unimplemented') {
+                console.warn("Firestore persistence not supported by this browser.");
+            }
+        });
+
         const VND_TO_PHP_RATIO = 2 / 800;
+        const ADMIN_MARKUP = 700;
         const ADMIN_NAME = "SimplyFab";
         const ADMIN_PHONE = "021910";
         const COMPANY_EMAIL = "tin23_angela@gmail.com";
@@ -963,6 +1048,33 @@
         function getRegisteredUsers() {
             const saved = localStorage.getItem('sf_registered_users');
             return saved ? JSON.parse(saved) : [];
+        }
+
+        function updateLaunchMetrics() {
+            const usersCount = getRegisteredUsers().length;
+            const dressesCount = (liveGownsCatalog.length > 0) ? liveGownsCatalog.length : defaultGowns.length;
+            
+            const metricUsersEl = document.getElementById('metric-total-users');
+            const metricDressesEl = document.getElementById('metric-total-dresses');
+            
+            if (metricUsersEl) metricUsersEl.textContent = usersCount;
+            if (metricDressesEl) metricDressesEl.textContent = dressesCount;
+        }
+
+        window.openLightbox = function(imgSrc) {
+            const lightbox = document.getElementById('image-lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            if (lightbox && lightboxImg) {
+                lightboxImg.src = imgSrc;
+                lightbox.classList.add('active');
+            }
+        }
+
+        window.closeLightbox = function() {
+            const lightbox = document.getElementById('image-lightbox');
+            if (lightbox) {
+                lightbox.classList.remove('active');
+            }
         }
 
         window.toggleLikeItem = async function(id) {
@@ -1063,10 +1175,10 @@
 
         window.previewPhpConversion = function() {
             const vndInput = parseFloat(document.getElementById('new-price-vnd').value) || 0;
-            const phpValue = vndInput * VND_TO_PHP_RATIO;
+            const phpValue = (vndInput * VND_TO_PHP_RATIO) + ADMIN_MARKUP;
             const previewEl = document.getElementById('vnd-conversion-preview');
             if (previewEl) {
-                previewEl.textContent = `Equivalent: ₱${phpValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} PHP (Rate: 800 VND = 2 PHP)`;
+                previewEl.textContent = `Equivalent: ₱${phpValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} PHP (Includes Admin ₱700 markup)`;
             }
         }
 
@@ -1103,6 +1215,7 @@
                 if (clientName) clientName.value = name;
                 if (clientPhone) clientPhone.value = phone;
                 renderCatalog();
+                updateLaunchMetrics();
             }
         }
 
@@ -1127,7 +1240,7 @@
         }
 
         function activateAdminMode() {
-            const panels = ['admin-panel-catalog', 'admin-panel-users', 'admin-panel-contact'];
+            const panels = ['admin-panel-metrics', 'admin-panel-catalog', 'admin-panel-users', 'admin-panel-contact'];
             panels.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('active');
@@ -1137,10 +1250,11 @@
             const toggleBtn = document.getElementById('admin-toggle-btn-ui');
             if (toggleBtn) toggleBtn.style.display = 'inline-block';
             renderRegisteredUsers();
+            updateLaunchMetrics();
         }
 
         window.toggleAdminPanel = function() {
-            const panels = ['admin-panel-catalog', 'admin-panel-users', 'admin-panel-contact'];
+            const panels = ['admin-panel-metrics', 'admin-panel-catalog', 'admin-panel-users', 'admin-panel-contact'];
             const firstPanel = document.getElementById('admin-panel-catalog');
             const isActive = firstPanel ? firstPanel.classList.contains('active') : false;
             
@@ -1156,6 +1270,7 @@
             });
             if (!isActive) {
                 renderRegisteredUsers();
+                updateLaunchMetrics();
             }
         }
 
@@ -1218,7 +1333,7 @@
                 const comments = gown.comments || [];
 
                 const images = gown.images || [gown.img];
-                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}">`).join('');
+                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom design">`).join('');
                 if (gown.video) {
                     mediaHtml += `<video src="${gown.video}" controls muted></video>`;
                 }
@@ -1260,7 +1375,6 @@
                             <p>${gown.desc}</p>
                             <div class="price">₱<span id="card-price-${gown.id}">${parseFloat(gown.price).toLocaleString('en-US', {minimumFractionDigits: 2})}</span></div>
                             
-                            <!-- Inline Admin Name & Price Edit Box -->
                             <div class="admin-price-box">
                                 <label>Edit Dress Label / Name:</label>
                                 <div class="admin-price-input-group">
@@ -1276,7 +1390,6 @@
                             <button class="btn-cart" onclick="addToCart('${gown.id}')">Add to Liked Items 🛍️</button>
                         </div>
 
-                        <!-- Comments Section with Admin Delete Option -->
                         <div class="comments-section">
                             <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 6px;">💬 Customer Comments (${comments.length})</div>
                             <div class="comments-list">
@@ -1290,6 +1403,7 @@
                     </div>
                 `;
             }).join('');
+            updateLaunchMetrics();
         }
 
         window.slideMedia = function(gownId, direction) {
@@ -1444,7 +1558,7 @@
             const name = document.getElementById('new-name').value;
             const desc = document.getElementById('new-desc').value;
             const priceVndInput = parseFloat(document.getElementById('new-price-vnd').value) || 0;
-            const pricePhp = (priceVndInput * VND_TO_PHP_RATIO).toFixed(2);
+            const pricePhp = ((priceVndInput * VND_TO_PHP_RATIO) + ADMIN_MARKUP).toFixed(2);
             const customId = `ITEM-00${(liveGownsCatalog.length || defaultGowns.length) + 1}`;
 
             const fileInput = document.getElementById('new-imgs');
@@ -1477,7 +1591,7 @@
                     await addDoc(collection(db, "gowns_catalog"), newGown);
                     event.target.reset();
                     previewPhpConversion();
-                    alert(`New dress published successfully with ID ${customId}!`);
+                    alert(`New dress published successfully with ID ${customId} (includes ₱700 admin markup)!`);
                 } catch (e) {
                     console.error("Error adding document to Firebase: ", e);
                     alert("Error publishing dress to database. Check console.");
@@ -1496,7 +1610,7 @@
             }
 
             files.forEach((file, index) => {
-                resizeImage(file, 800, 800, 0.75, function(compressedDataUrl) {
+                resizeImage(file, 1200, 1200, 0.8, function(compressedDataUrl) {
                     loadedImages[index] = compressedDataUrl;
                     processedImages++;
                     checkCompletion();
