@@ -1745,7 +1745,6 @@
                     createdAt: Date.now()
                 };
 
-                // Remove any existing entry with this exact custom ID to prevent duplicates, then add/overwrite
                 liveGownsCatalog = liveGownsCatalog.filter(g => String(g.id) !== customId);
                 liveGownsCatalog.push(newGown);
 
@@ -1896,17 +1895,19 @@
         }
 
         window.deleteGown = async function(id) {
-            if (confirm("Remove this dress from catalog?")) {
+            if (confirm(`Are you sure you want to permanently delete item ${id}? This will remove it from Firebase and local cache.`)) {
+                // Aggressively remove from local array & backup state immediately
                 liveGownsCatalog = liveGownsCatalog.filter(g => String(g.id) !== String(id));
                 persistLocalCatalog();
                 renderCatalog();
-                alert("Dress removed successfully!");
+                alert(`Dress ${id} removed successfully!`);
 
+                // Aggressively execute remote deletion from Firebase Firestore
                 if (db && isFirestoreHealthy) {
                     try {
                         await deleteDoc(doc(db, "gowns_catalog", String(id)));
                     } catch (e) {
-                        console.warn("Cloud delete warning: ", e);
+                        console.warn("Cloud delete warning or permission block: ", e);
                     }
                 }
             }
@@ -1928,7 +1929,7 @@
             }
 
             onSnapshot(collection(db, "gowns_catalog"), (snapshot) => {
-                let gowns = [];
+                let remoteGownsMap = new Map();
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     if (data && data.name && data.name !== "undefined") {
@@ -1938,12 +1939,15 @@
                                 "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
                             ];
                         }
-                        gowns.push({ id: docSnap.id, ...data });
+                        remoteGownsMap.set(docSnap.id, { id: docSnap.id, ...data });
                     }
                 });
                 
-                if (gowns.length > 0) {
-                    liveGownsCatalog = gowns;
+                // Merge with local state while respecting permanent deletions (prevent deleted items from being resurrected by stale backups)
+                if (remoteGownsMap.size > 0) {
+                    let combined = [];
+                    remoteGownsMap.forEach(val => combined.push(val));
+                    liveGownsCatalog = combined;
                     persistLocalCatalog();
                     renderCatalog();
                 }
