@@ -1053,6 +1053,19 @@
             return (baseVnd * VND_TO_PHP_RATIO) + ADMIN_MARKUP;
         }
 
+        // Helper to safely extract or normalize VND price from older or mismatched records
+        function getNormalizedVnd(gown) {
+            if (gown.priceVnd !== undefined && gown.priceVnd !== null && !isNaN(gown.priceVnd)) {
+                return parseFloat(gown.priceVnd);
+            }
+            if (gown.price !== undefined && gown.price !== null && !isNaN(gown.price)) {
+                // Backward compatibility: If an old record stored a PHP price, reverse-engineer it back to VND approximation
+                const rawPhp = parseFloat(gown.price);
+                return Math.max(0, (rawPhp - ADMIN_MARKUP) / VND_TO_PHP_RATIO);
+            }
+            return 500000; // default fallback VND
+        }
+
         function getRegisteredUsers() {
             const saved = localStorage.getItem('sf_registered_users');
             return saved ? JSON.parse(saved) : [];
@@ -1345,7 +1358,7 @@
                 const isLiked = currentUser ? likes.includes(currentUser.phone) : false;
                 const comments = gown.comments || [];
 
-                let vndValue = gown.priceVnd !== undefined ? gown.priceVnd : (parseFloat(gown.price || 0) / VND_TO_PHP_RATIO);
+                let vndValue = getNormalizedVnd(gown);
                 let userPhpPrice = calculatePhpPrice(vndValue);
 
                 const images = gown.images || [gown.img] || [];
@@ -1443,7 +1456,7 @@
             const gown = gowns.find(g => String(g.id) === String(id));
             if (!gown) return;
 
-            let vnd = gown.priceVnd !== undefined ? gown.priceVnd : (parseFloat(gown.price || 0) / VND_TO_PHP_RATIO);
+            let vnd = getNormalizedVnd(gown);
             let phpFinal = calculatePhpPrice(vnd);
 
             const existing = cart.find(item => String(item.id) === String(id));
@@ -1451,7 +1464,7 @@
             if (existing) {
                 existing.qty += 1;
             } else {
-                cart.push({ ...gown, price: phpFinal.toFixed(2), qty: 1 });
+                cart.push({ ...gown, priceVnd: vnd, qty: 1 });
             }
 
             renderCart();
@@ -1492,7 +1505,7 @@
 
             let total = 0;
             tbody.innerHTML = cart.map(item => {
-                let vnd = item.priceVnd !== undefined ? item.priceVnd : (parseFloat(item.price || 0) / VND_TO_PHP_RATIO);
+                let vnd = getNormalizedVnd(item);
                 let unitPhp = calculatePhpPrice(vnd);
                 const itemTotal = unitPhp * item.qty;
                 total += itemTotal;
@@ -1516,7 +1529,7 @@
 
             if (itemizedListEl && summaryTotalEl) {
                 itemizedListEl.innerHTML = cart.map(item => {
-                    let vnd = item.priceVnd !== undefined ? item.priceVnd : (parseFloat(item.price || 0) / VND_TO_PHP_RATIO);
+                    let vnd = getNormalizedVnd(item);
                     let sub = calculatePhpPrice(vnd) * item.qty;
                     return `
                         <div class="summary-row">
@@ -1668,7 +1681,7 @@
                 return;
             }
 
-            // Strictly update the local catalog state item without duplication
+            // Update local state cleanly
             let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
             const gown = gowns.find(g => String(g.id) === String(id));
             if (gown) {
@@ -1680,7 +1693,7 @@
             alert(`Item ${id} successfully updated!`);
 
             try {
-                // Use strict updateDoc targeting the exact document ID to prevent duplicate generation
+                // Strictly target existing document ID without creating duplicates
                 const gownRef = doc(db, "gowns_catalog", String(id));
                 await updateDoc(gownRef, { 
                     name: newName, 
@@ -1715,14 +1728,14 @@
             const phone = document.getElementById('client-phone').value;
 
             const itemsSummary = cart.map(i => {
-                let vnd = i.priceVnd !== undefined ? i.priceVnd : (parseFloat(i.price || 0) / VND_TO_PHP_RATIO);
+                let vnd = getNormalizedVnd(i);
                 let unit = calculatePhpPrice(vnd);
                 return `• [${i.id}] ${i.name} | Qty: ${i.qty} | Subtotal: ₱${(unit * i.qty).toFixed(2)}`;
             }).join('\n');
 
             let totalAmount = 0;
             cart.forEach(i => {
-                let vnd = i.priceVnd !== undefined ? i.priceVnd : (parseFloat(i.price || 0) / VND_TO_PHP_RATIO);
+                let vnd = getNormalizedVnd(i);
                 totalAmount += calculatePhpPrice(vnd) * i.qty;
             });
 
@@ -1778,21 +1791,3 @@
                 console.warn("Firestore snapshot offline fallback active. Loading default catalog.", error);
                 if (liveGownsCatalog.length === 0) {
                     liveGownsCatalog = defaultGowns;
-                    renderCatalog();
-                }
-            });
-        }
-
-        checkVisitorSession();
-        initRealtimeCatalog();
-        
-        if (liveGownsCatalog.length === 0) {
-            liveGownsCatalog = defaultGowns;
-            renderCatalog();
-        }
-
-        renderCart();
-        loadContactInfo();
-    </script>
-</body>
-</html>
