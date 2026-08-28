@@ -23,6 +23,66 @@
             scroll-behavior: smooth;
         }
 
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-card {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .modal-card h2 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .modal-card p {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        /* Messenger Bubble */
+        .messenger-bubble {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background-color: #0084FF;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-decoration: none;
+            font-size: 28px;
+            z-index: 1000;
+            transition: transform 0.2s;
+        }
+
+        .messenger-bubble:hover {
+            transform: scale(1.08);
+        }
+
         /* Navigation */
         nav {
             background-color: var(--white);
@@ -128,12 +188,30 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .section-title {
             font-size: 30px;
             color: var(--primary);
             margin: 0;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            background: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            outline: none;
         }
 
         /* Admin Management Panels */
@@ -159,7 +237,7 @@
 
         .admin-form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 120px;
             gap: 15px;
             align-items: flex-end;
         }
@@ -222,7 +300,7 @@
             font-weight: 600;
         }
 
-        /* Catalog Grid */
+        /* Catalog Grid & Image Slider (Sliding Left) */
         .catalog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -244,11 +322,48 @@
             transform: translateY(-5px);
         }
 
-        .card img {
+        .carousel-container {
+            position: relative;
             width: 100%;
             height: 320px;
-            object-fit: cover;
             background-color: #eee;
+            overflow: hidden;
+        }
+
+        .carousel-track {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.4s ease-in-out;
+        }
+
+        .carousel-track img {
+            min-width: 100%;
+            height: 100%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.4);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 3px;
+            font-size: 14px;
+            z-index: 5;
+        }
+
+        .carousel-btn.prev { left: 8px; }
+        .carousel-btn.next { right: 8px; }
+
+        .carousel-btn:hover {
+            background: rgba(0,0,0,0.7);
         }
 
         .card-body {
@@ -260,15 +375,31 @@
         }
 
         .card-body h3 {
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0;
             font-size: 18px;
         }
 
         .card-body p {
             color: var(--text-light);
             font-size: 14px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             flex-grow: 1;
+        }
+
+        .tags-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .badge {
+            background: #f5e6e8;
+            color: var(--primary);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
         }
 
         .price {
@@ -310,6 +441,7 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
         }
 
         .admin-mode .btn-delete-item {
@@ -427,6 +559,30 @@
 </head>
 <body id="body-root">
 
+    <!-- Login Modal Pop-up on Visit -->
+    <div id="login-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h2>✨ Welcome to Simply Fab 2.0</h2>
+            <p>Please enter your name and phone number to browse and access our gown collection.</p>
+            <form onsubmit="handleVisitorLogin(event)">
+                <div class="form-group" style="text-align: left;">
+                    <label for="visitor-name">Full Name:</label>
+                    <input type="text" id="visitor-name" class="form-control" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label for="visitor-phone">Phone Number:</label>
+                    <input type="text" id="visitor-phone" class="form-control" placeholder="Enter your phone number" required>
+                </div>
+                <button type="submit" class="btn-submit">Enter Website</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Facebook Messenger Bubble -->
+    <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">
+        💬
+    </a>
+
     <nav>
         <a href="#" class="nav-brand">✨ Simply Fab 2.0</a>
         <ul class="nav-links">
@@ -447,10 +603,31 @@
     <div id="catalog" class="container">
         <div class="section-header-flex">
             <h2 class="section-title">Featured Gown Collection</h2>
+            <div class="filter-controls">
+                <select id="filter-color" class="filter-select" onchange="renderCatalog()">
+                    <option value="">All Colors</option>
+                    <option value="Red">Red</option>
+                    <option value="Blue">Blue</option>
+                    <option value="Blush/Pink">Blush/Pink</option>
+                    <option value="Emerald">Emerald</option>
+                    <option value="Black">Black</option>
+                    <option value="White/Ivory">White/Ivory</option>
+                    <option value="Gold/Champagne">Gold/Champagne</option>
+                </select>
+                <select id="filter-size" class="filter-select" onchange="renderCatalog()">
+                    <option value="">All Sizes</option>
+                    <option value="XS">XS</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="Custom">Custom</option>
+                </select>
+            </div>
         </div>
 
         <div id="admin-panel-catalog" class="admin-panel">
-            <h3>⚙️ Admin Panel: Add New Gown Item</h3>
+            <h3>⚙️ Admin Panel: Add New Gown Item (Upload 3 or More Pictures)</h3>
             <form onsubmit="handleAddNewGown(event)">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
@@ -466,8 +643,32 @@
                         <input type="number" id="new-price" class="form-control" placeholder="2500" step="0.01" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>Upload Image:</label>
-                        <input type="file" id="new-img" class="form-control" accept="image/*" required style="padding: 6px;">
+                        <label>Color:</label>
+                        <select id="new-color" class="form-control" required>
+                            <option value="Blush/Pink">Blush/Pink</option>
+                            <option value="Black">Black</option>
+                            <option value="Gold/Champagne">Gold/Champagne</option>
+                            <option value="Red">Red</option>
+                            <option value="Blue">Blue</option>
+                            <option value="Emerald">Emerald</option>
+                            <option value="White/Ivory">White/Ivory</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Size:</label>
+                        <select id="new-size" class="form-control" required>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XS">XS</option>
+                            <option value="XL">XL</option>
+                            <option value="Custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
+                        <label>Upload 3 or More Images:</label>
+                        <input type="file" id="new-imgs" class="form-control" accept="image/*" multiple required style="padding: 6px;">
+                        <small style="color: #666; font-size: 11px;">Hold Ctrl/Cmd to select multiple image files.</small>
                     </div>
                     <button type="submit" class="btn-submit" style="margin-top:0; height: 40px;">Publish Gown</button>
                 </div>
@@ -597,7 +798,7 @@
 
     <footer id="contact">
         <p><strong>Simply Fab 2.0 - Gown Rental & Styling Services</strong></p>
-        <p>Website: <span id="footer-web">SimyiyFab.com</span> | Email: <span id="footer-email">Contaxt@iorail.com</span> | Phone: <span id="footer-phone">+ (83) 9572-7915</span></p>
+        <p>Website: <span id="footer-web">SimyiyFab.com</span> | Email: <span id="footer-email">tin23_angela@gmail.com</span> | Phone: <span id="footer-phone">09954836767</span></p>
         <p style="margin-top: 15px; font-size: 11px; color: #aaa;">&copy; 2026 Simply Fab 2.0. All rights reserved.</p>
     </footer>
 
@@ -608,21 +809,39 @@
                 name: "The Aria Ballgown",
                 desc: "Elegant princess-cut ballgown with crystal embellishments.",
                 price: "2500.00",
-                img: "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
+                color: "Blush/Pink",
+                size: "S",
+                images: [
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
+                ]
             },
             {
                 id: 2,
                 name: "Velvet Evening Silhouette",
                 desc: "Sleek, form-fitting evening dress designed for gala events.",
                 price: "2200.00",
-                img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
+                color: "Black",
+                size: "M",
+                images: [
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80"
+                ]
             },
             {
                 id: 3,
                 name: "Royal Lace Modern Terno",
                 desc: "Traditional yet modern filipiniana aesthetic for formal occasions.",
                 price: "3000.00",
-                img: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80"
+                color: "Gold/Champagne",
+                size: "L",
+                images: [
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
+                ]
             }
         ];
 
@@ -638,22 +857,95 @@
             return saved ? JSON.parse(saved) : [];
         }
 
+        function handleVisitorLogin(event) {
+            event.preventDefault();
+            const name = document.getElementById('visitor-name').value.trim();
+            const phone = document.getElementById('visitor-phone').value.trim();
+            if (name && phone) {
+                localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone }));
+                document.getElementById('login-modal').style.display = 'none';
+                document.getElementById('client-name').value = name;
+                document.getElementById('client-phone').value = phone;
+
+                // Send registration notification to company email
+                const contactInfo = JSON.parse(localStorage.getItem('sf_contact_info')) || { email: "tin23_angela@gmail.com" };
+                console.log(`[Email Notification Sent to ${contactInfo.email}] New user registered: Name: ${name}, Phone: ${phone}`);
+            }
+        }
+
+        function checkVisitorSession() {
+            const user = localStorage.getItem('sf_logged_user');
+            if (user) {
+                document.getElementById('login-modal').style.display = 'none';
+                const parsed = JSON.parse(user);
+                document.getElementById('client-name').value = parsed.name;
+                document.getElementById('client-phone').value = parsed.phone;
+            } else {
+                document.getElementById('login-modal').style.display = 'flex';
+            }
+        }
+
         function renderCatalog() {
             const grid = document.getElementById('catalog-grid');
-            const gowns = getGowns();
+            const selectedColor = document.getElementById('filter-color').value;
+            const selectedSize = document.getElementById('filter-size').value;
+            let gowns = getGowns();
 
-            grid.innerHTML = gowns.map(gown => `
-                <div class="card">
-                    <button class="btn-delete-item" onclick="deleteGown(${gown.id})" title="Delete item">×</button>
-                    <img src="${gown.img}" alt="${gown.name}">
-                    <div class="card-body">
-                        <h3>${gown.name}</h3>
-                        <p>${gown.desc}</p>
-                        <div class="price">₱${parseFloat(gown.price).toLocaleString('en-US', {minimumFractionDigits: 2})} / rental</div>
-                        <button class="btn-cart" onclick="addToCart(${gown.id})">Add to Cart 🛍️</button>
+            if (selectedColor) {
+                gowns = gowns.filter(g => g.color === selectedColor);
+            }
+            if (selectedSize) {
+                gowns = gowns.filter(g => g.size === selectedSize);
+            }
+
+            if (gowns.length === 0) {
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No gowns match the selected color and size filters.</p>`;
+                return;
+            }
+
+            grid.innerHTML = gowns.map(gown => {
+                const images = gown.images || [gown.img];
+                const imgHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}">`).join('');
+                const carouselControls = images.length > 1 ? `
+                    <button class="carousel-btn prev" onclick="slideImage(${gown.id}, -1)">&#10094;</button>
+                    <button class="carousel-btn next" onclick="slideImage(${gown.id}, 1)">&#10095;</button>
+                ` : '';
+
+                return `
+                    <div class="card" id="card-${gown.id}">
+                        <button class="btn-delete-item" onclick="deleteGown(${gown.id})" title="Delete item">×</button>
+                        <div class="carousel-container" data-index="0" data-total="${images.length}">
+                            <div class="carousel-track" id="track-${gown.id}">
+                                ${imgHtml}
+                            </div>
+                            ${carouselControls}
+                        </div>
+                        <div class="card-body">
+                            <h3>${gown.name}</h3>
+                            <div class="tags-row">
+                                <span class="badge">🎨 ${gown.color || 'Standard'}</span>
+                                <span class="badge">📏 Size: ${gown.size || 'Free'}</span>
+                            </div>
+                            <p>${gown.desc}</p>
+                            <div class="price">₱${parseFloat(gown.price).toLocaleString('en-US', {minimumFractionDigits: 2})} / rental</div>
+                            <button class="btn-cart" onclick="addToCart(${gown.id})">Add to Cart 🛍️</button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        function slideImage(gownId, direction) {
+            const card = document.getElementById(`card-${gownId}`);
+            const container = card.querySelector('.carousel-container');
+            const track = document.getElementById(`track-${gownId}`);
+            let currentIndex = parseInt(container.getAttribute('data-index'));
+            let totalImages = parseInt(container.getAttribute('data-total'));
+
+            currentIndex = (currentIndex + direction + totalImages) % totalImages;
+            container.setAttribute('data-index', currentIndex);
+            
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
         }
 
         function addToCart(id) {
@@ -703,7 +995,7 @@
                 total += itemTotal;
                 return `
                     <tr>
-                        <td><strong>${item.name}</strong></td>
+                        <td><strong>${item.name}</strong> (${item.color}, Size: ${item.size})</td>
                         <td>
                             <button type="button" onclick="updateCartQty(${item.id}, -1)" style="padding: 2px 6px;">-</button>
                             <span style="margin: 0 6px;">${item.qty}</span>
@@ -799,8 +1091,8 @@
         function loadContactInfo() {
             const contactInfo = JSON.parse(localStorage.getItem('sf_contact_info')) || {
                 web: "SimyiyFab.com",
-                email: "Contaxt@iorail.com",
-                phone: "+ (83) 9572-7915"
+                email: "tin23_angela@gmail.com",
+                phone: "09954836767"
             };
 
             document.getElementById('footer-web').textContent = contactInfo.web;
@@ -813,14 +1105,19 @@
         }
 
         function toggleAdminPanel() {
-            const pin = prompt("Enter Admin Passcode:");
-            if (pin === "2026") {
-                const panels = ['admin-panel-catalog', 'admin-panel-qrs', 'admin-panel-tracker', 'admin-panel-contact'];
-                panels.forEach(id => document.getElementById(id).classList.toggle('active'));
-                document.getElementById('body-root').classList.toggle('admin-mode');
-                alert("Admin mode unlocked successfully!");
-            } else if (pin !== null) {
-                alert("Incorrect passcode.");
+            const user = prompt("Enter Admin Username:");
+            if (user === "SimplyFab") {
+                const pin = prompt("Enter Admin Password:");
+                if (pin === "021910") {
+                    const panels = ['admin-panel-catalog', 'admin-panel-qrs', 'admin-panel-tracker', 'admin-panel-contact'];
+                    panels.forEach(id => document.getElementById(id).classList.toggle('active'));
+                    document.getElementById('body-root').classList.toggle('admin-mode');
+                    alert("Admin mode unlocked successfully!");
+                } else if (pin !== null) {
+                    alert("Incorrect password.");
+                }
+            } else if (user !== null) {
+                alert("Incorrect username.");
             }
         }
 
@@ -829,31 +1126,45 @@
             const name = document.getElementById('new-name').value;
             const desc = document.getElementById('new-desc').value;
             const price = parseFloat(document.getElementById('new-price').value).toFixed(2);
-            const fileInput = document.getElementById('new-img');
+            const color = document.getElementById('new-color').value;
+            const size = document.getElementById('new-size').value;
+            const fileInput = document.getElementById('new-imgs');
 
-            const file = fileInput.files[0];
-            if (file) {
+            const files = Array.from(fileInput.files);
+            if (files.length < 3) {
+                alert("Please select at least 3 pictures for the product.");
+                return;
+            }
+
+            let loadedImages = [];
+            let processed = 0;
+
+            files.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const imgBase64 = e.target.result;
-                    const gowns = getGowns();
-                    
-                    const newGown = {
-                        id: Date.now(),
-                        name,
-                        desc,
-                        price,
-                        img: imgBase64
-                    };
+                    loadedImages[index] = e.target.result;
+                    processed++;
+                    if (processed === files.length) {
+                        const gowns = getGowns();
+                        const newGown = {
+                            id: Date.now(),
+                            name,
+                            desc,
+                            price,
+                            color,
+                            size,
+                            images: loadedImages
+                        };
 
-                    gowns.unshift(newGown);
-                    localStorage.setItem('sf_gowns_catalog', JSON.stringify(gowns));
-                    renderCatalog();
-                    event.target.reset();
-                    alert("New gown published successfully!");
+                        gowns.unshift(newGown);
+                        localStorage.setItem('sf_gowns_catalog', JSON.stringify(gowns));
+                        renderCatalog();
+                        event.target.reset();
+                        alert("New gown with multiple pictures published successfully!");
+                    }
                 };
                 reader.readAsDataURL(file);
-            }
+            });
         }
 
         function handleUpdateContact(event) {
@@ -900,7 +1211,7 @@
             localStorage.setItem('sf_inquiries_tracker', JSON.stringify(inquiries));
             renderTracker();
 
-            const contactInfo = JSON.parse(localStorage.getItem('sf_contact_info')) || { email: "Contaxt@iorail.com" };
+            const contactInfo = JSON.parse(localStorage.getItem('sf_contact_info')) || { email: "tin23_angela@gmail.com" };
             alert(`Order successfully placed, ${name}!\n\n[Notification sent to company email: ${contactInfo.email}]\nPayment via: ${paymentMethod}\nStatus: PENDING approval.`);
             
             cart = [];
@@ -928,6 +1239,7 @@
         }
 
         // Initialize state on load
+        checkVisitorSession();
         renderCatalog();
         renderCart();
         renderTracker();
