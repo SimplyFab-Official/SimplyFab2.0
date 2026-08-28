@@ -1052,7 +1052,11 @@
         }
 
         function saveLocalBackupGowns(gownsList) {
-            localStorage.setItem('sf_local_fallback_gowns', JSON.stringify(gownsList));
+            try {
+                localStorage.setItem('sf_local_fallback_gowns', JSON.stringify(gownsList));
+            } catch (e) {
+                console.warn("LocalStorage quota exceeded. Skipping local backup caching to prevent crash.", e);
+            }
         }
 
         function updateLaunchMetrics() {
@@ -1621,7 +1625,7 @@
             }
 
             files.forEach((file, index) => {
-                resizeImage(file, 1200, 1200, 0.8, function(compressedDataUrl) {
+                resizeImage(file, 600, 600, 0.6, function(compressedDataUrl) {
                     loadedImages[index] = compressedDataUrl;
                     processedImages++;
                     checkCompletion();
