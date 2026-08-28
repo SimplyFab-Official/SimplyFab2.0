@@ -782,10 +782,12 @@
 </head>
 <body id="body-root">
 
+    <!-- Image Lightbox Modal Viewer -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="Enlarged Dress Design">
     </div>
 
+    <!-- Login Modal Pop-up on Visit -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
@@ -804,6 +806,7 @@
         </div>
     </div>
 
+    <!-- Floating Facebook Messenger Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">
         💬
     </a>
@@ -833,6 +836,7 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
+        <!-- Launch Progress Metrics Tracker Panel -->
         <div id="admin-panel-metrics" class="admin-panel">
             <h3>🚀 App Launch Progress: Registration Tracker</h3>
             <p style="font-size: 13px; color: #666; margin-top:0;">Track user registration growth as you prepare for the official launch.</p>
@@ -878,6 +882,7 @@
             </form>
         </div>
 
+        <!-- Admin Duplicate Clean-up Panel -->
         <div id="admin-panel-duplicates" class="admin-panel" style="border-left-color: #d9534f;">
             <h3>🧹 Admin Panel: Duplicate & Clean-up Filter</h3>
             <p style="font-size: 13px; color: #666; margin-top:0;">Scan and instantly purge corrupted, accidental duplicate items, or orphaned records from Firebase.</p>
@@ -950,6 +955,7 @@
                 Total Estimated Amount: ₱<span id="cart-total-display">0.00</span>
             </div>
 
+            <!-- Itemized Summary Box -->
             <div class="checkout-summary-box">
                 <h4>📦 Liked Items Summary</h4>
                 <div id="checkout-itemized-list">
@@ -1204,6 +1210,7 @@
             const phone = document.getElementById('visitor-phone').value.trim();
             
             if (name && phone) {
+                // Robust admin check: supports variations like "SimplyFab", "simplyfab", and code "021910"
                 if (name.toLowerCase() === ADMIN_NAME.toLowerCase() && phone === ADMIN_PHONE) {
                     localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone, isAdmin: true }));
                     const modal = document.getElementById('login-modal');
@@ -1440,6 +1447,7 @@
                             <p>${gown.desc || ''}</p>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
+                            <!-- Admin Edit Box (VND Price + Auto +₱700 Markup) -->
                             <div class="admin-price-box">
                                 <label for="name-input-${itemId}">Edit Dress Name:</label>
                                 <div class="admin-price-input-group">
@@ -1729,7 +1737,6 @@
 
             try {
                 const gownRef = doc(db, "gowns_catalog", String(id));
-                // Use setDoc with merge:true so it updates safely whether the document already exists remotely or needs initialization
                 await setDoc(gownRef, { 
                     name: newName, 
                     priceVnd: newVnd 
