@@ -995,7 +995,7 @@
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
         } catch (err) {
-            console.warn("Aggressive Fallback: Firebase initialization failed, running local memory mode.", err);
+            console.warn("Firebase init failed, using local memory mode.", err);
             isFirestoreHealthy = false;
         }
 
@@ -1459,11 +1459,17 @@
                 let vndValue = getNormalizedVnd(gown);
                 let userPhpPrice = calculatePhpPrice(vndValue);
 
-                const images = (gown.images && gown.images.length > 0) ? gown.images : [
-                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
-                ];
+                // Robust Image Verification: Ensure images always fall back cleanly to a valid image array
+                let images = gown.images;
+                if (!images || !Array.isArray(images) || images.length === 0 || (images.length === 1 && !images[0])) {
+                    images = [
+                        "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
+                        "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
+                        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
+                    ];
+                }
 
-                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom design" onerror="this.src='https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80'">`).join('');
+                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom design" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80';">`).join('');
                 if (gown.video) {
                     mediaHtml += `<video src="${gown.video}" controls muted></video>`;
                 }
@@ -1800,11 +1806,16 @@
             const gown = liveGownsCatalog.find(g => String(g.id) === String(id));
             if (!gown) return;
 
-            // Aggressively lock down and preserve all images and sub-properties
+            // Explicitly lock in name and price changes while leaving existing images and assets completely untouched
             gown.name = newName;
             gown.priceVnd = newVnd;
-            if (!gown.images || gown.images.length === 0) {
-                gown.images = ["https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"];
+
+            if (!gown.images || !Array.isArray(gown.images) || gown.images.length === 0) {
+                gown.images = [
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
+                ];
             }
 
             persistLocalCatalog();
@@ -1930,6 +1941,13 @@
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     if (data && data.name && data.name !== "undefined") {
+                        // Ensure incoming remote doc has a valid image array or inherit defaults
+                        if (!data.images || !Array.isArray(data.images) || data.images.length === 0) {
+                            const localMatch = liveGownsCatalog.find(g => g.id === docSnap.id);
+                            data.images = (localMatch && localMatch.images) ? localMatch.images : [
+                                "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
+                            ];
+                        }
                         gowns.push({ id: docSnap.id, ...data });
                     }
                 });
@@ -1940,7 +1958,7 @@
                     renderCatalog();
                 }
             }, (error) => {
-                console.warn("Firestore snapshot offline/blocked mode active. Using aggressive local cache.", error);
+                console.warn("Firestore snapshot offline/blocked mode active. Using robust local cache.", error);
                 isFirestoreHealthy = false;
                 renderCatalog();
             });
