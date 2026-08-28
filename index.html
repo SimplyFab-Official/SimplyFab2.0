@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simply Fab 2.0 - Gown Rental & Styling Services</title>
+    <title>SimplyFab Dress Catalogue</title>
     <style>
         :root {
             --primary: #b5838d;
@@ -300,7 +300,24 @@
             font-weight: 600;
         }
 
-        /* Catalog Grid & Image Slider (Sliding Left) */
+        .btn-export {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        .btn-export:hover {
+            background-color: #9d6b76;
+        }
+
+        /* Catalog Grid & Media Display (Sliding Left Animation) */
         .catalog-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -337,7 +354,7 @@
             transition: transform 0.4s ease-in-out;
         }
 
-        .carousel-track img {
+        .carousel-track img, .carousel-track video {
             min-width: 100%;
             height: 100%;
             object-fit: cover;
@@ -562,8 +579,8 @@
     <!-- Login Modal Pop-up on Visit -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
-            <h2>✨ Welcome to Simply Fab 2.0</h2>
-            <p>Please enter your name and phone number to browse and access our gown collection.</p>
+            <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
+            <p>Please enter your name and phone number to browse and access our dress collection.</p>
             <form onsubmit="handleVisitorLogin(event)">
                 <div class="form-group" style="text-align: left;">
                     <label for="visitor-name">Full Name:</label>
@@ -584,10 +601,10 @@
     </a>
 
     <nav>
-        <a href="#" class="nav-brand">✨ Simply Fab 2.0</a>
+        <a href="#" class="nav-brand">✨ SimplyFab Dress Catalogue</a>
         <ul class="nav-links">
             <li><a href="#home">Home</a></li>
-            <li><a href="#catalog">Gown Collection</a></li>
+            <li><a href="#catalog">Dress Collection</a></li>
             <li><a href="#cart-checkout">Cart & Checkout</a></li>
             <li><a href="#contact">Contact</a></li>
             <li><button class="admin-toggle-btn" onclick="toggleAdminPanel()">🔒 Admin Mode</button></li>
@@ -596,13 +613,13 @@
 
     <section id="home" class="hero">
         <h1>Look Stunning. Feel Beautiful.</h1>
-        <p>Your premier destination for elegant gown rentals and professional styling services.</p>
+        <p>Your premier destination for elegant dress rentals and professional styling services.</p>
         <a href="#catalog" class="btn-primary">Explore Collection</a>
     </section>
 
     <div id="catalog" class="container">
         <div class="section-header-flex">
-            <h2 class="section-title">Featured Gown Collection</h2>
+            <h2 class="section-title">Featured Dress Collection</h2>
             <div class="filter-controls">
                 <select id="filter-color" class="filter-select" onchange="renderCatalog()">
                     <option value="">All Colors</option>
@@ -627,11 +644,11 @@
         </div>
 
         <div id="admin-panel-catalog" class="admin-panel">
-            <h3>⚙️ Admin Panel: Add New Gown Item (Upload 3 or More Pictures)</h3>
+            <h3>⚙️ Admin Panel: Add New Dress Item (Price in VND -> Converts to PHP)</h3>
             <form onsubmit="handleAddNewGown(event)">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>Gown Name:</label>
+                        <label>Dress Name:</label>
                         <input type="text" id="new-name" class="form-control" placeholder="e.g., The Aria Ballgown" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
@@ -639,8 +656,9 @@
                         <input type="text" id="new-desc" class="form-control" placeholder="Short description" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label>Price (PHP):</label>
-                        <input type="number" id="new-price" class="form-control" placeholder="2500" step="0.01" required>
+                        <label>Price in VND (₫):</label>
+                        <input type="number" id="new-price-vnd" class="form-control" placeholder="1000000" step="1" required>
+                        <small style="color: #666; font-size: 11px;">Approx ~800 VND = 1 PHP</small>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label>Color:</label>
@@ -665,14 +683,36 @@
                             <option value="Custom">Custom</option>
                         </select>
                     </div>
-                    <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
-                        <label>Upload 3 or More Images:</label>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Upload Pictures (3+):</label>
                         <input type="file" id="new-imgs" class="form-control" accept="image/*" multiple required style="padding: 6px;">
-                        <small style="color: #666; font-size: 11px;">Hold Ctrl/Cmd to select multiple image files.</small>
                     </div>
-                    <button type="submit" class="btn-submit" style="margin-top:0; height: 40px;">Publish Gown</button>
+                    <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
+                        <label>Upload Product Video (Optional):</label>
+                        <input type="file" id="new-video" class="form-control" accept="video/*" style="padding: 6px;">
+                    </div>
+                    <button type="submit" class="btn-submit" style="margin-top:0; height: 40px;">Publish Dress</button>
                 </div>
             </form>
+        </div>
+
+        <div id="admin-panel-users" class="admin-panel">
+            <h3>👥 Admin Panel: Registered Users</h3>
+            <p style="font-size: 13px; color: #666; margin-top:0;">View all visitors who registered upon visiting the website.</p>
+            <div style="overflow-x: auto;">
+                <table class="tracker-table">
+                    <thead>
+                        <tr>
+                            <th>Registration Date</th>
+                            <th>Full Name</th>
+                            <th>Phone Number</th>
+                        </tr>
+                    </thead>
+                    <tbody id="registered-users-table-body">
+                        </tbody>
+                </table>
+            </div>
+            <button type="button" class="btn-export" onclick="exportRegisteredUsersCSV()">📥 Export Users to CSV</button>
         </div>
 
         <div id="admin-panel-qrs" class="admin-panel">
@@ -703,7 +743,7 @@
                             <th>Client Name</th>
                             <th>Phone</th>
                             <th>Event Date</th>
-                            <th>Selected Items / Gowns</th>
+                            <th>Selected Items / Dresses</th>
                             <th>Payment Method</th>
                             <th>Approval Status</th>
                         </tr>
@@ -745,14 +785,14 @@
             <table class="cart-table">
                 <thead>
                     <tr>
-                        <th>Gown Description</th>
+                        <th>Dress Description</th>
                         <th style="width: 80px;">Qty</th>
                         <th style="width: 120px;">Price (PHP)</th>
                         <th style="width: 40px;"></th>
                     </tr>
                 </thead>
                 <tbody id="cart-items-body">
-                    <tr><td colspan="4" style="text-align: center; color: #777;">Your cart is empty. Add a gown from the catalog above!</td></tr>
+                    <tr><td colspan="4" style="text-align: center; color: #777;">Your cart is empty. Add a dress from the catalog above!</td></tr>
                 </tbody>
             </table>
             
@@ -797,12 +837,14 @@
     </div>
 
     <footer id="contact">
-        <p><strong>Simply Fab 2.0 - Gown Rental & Styling Services</strong></p>
+        <p><strong>SimplyFab Dress Catalogue</strong></p>
         <p>Website: <span id="footer-web">SimyiyFab.com</span> | Email: <span id="footer-email">tin23_angela@gmail.com</span> | Phone: <span id="footer-phone">09954836767</span></p>
-        <p style="margin-top: 15px; font-size: 11px; color: #aaa;">&copy; 2026 Simply Fab 2.0. All rights reserved.</p>
+        <p style="margin-top: 15px; font-size: 11px; color: #aaa;">&copy; 2026 SimplyFab Dress Catalogue. All rights reserved.</p>
     </footer>
 
     <script>
+        const VND_TO_PHP_RATE = 0.0022;
+
         const defaultGowns = [
             {
                 id: 1,
@@ -815,7 +857,8 @@
                     "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
                     "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
                     "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
-                ]
+                ],
+                video: ""
             },
             {
                 id: 2,
@@ -828,7 +871,8 @@
                     "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
                     "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
                     "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80"
-                ]
+                ],
+                video: ""
             },
             {
                 id: 3,
@@ -841,7 +885,8 @@
                     "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
                     "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
                     "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
-                ]
+                ],
+                video: ""
             }
         ];
 
@@ -857,17 +902,30 @@
             return saved ? JSON.parse(saved) : [];
         }
 
+        function getRegisteredUsers() {
+            const saved = localStorage.getItem('sf_registered_users');
+            return saved ? JSON.parse(saved) : [];
+        }
+
         function handleVisitorLogin(event) {
             event.preventDefault();
             const name = document.getElementById('visitor-name').value.trim();
             const phone = document.getElementById('visitor-phone').value.trim();
             if (name && phone) {
+                const dateRegistered = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                
                 localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone }));
+                
+                let users = getRegisteredUsers();
+                if (!users.some(u => u.phone === phone)) {
+                    users.unshift({ dateRegistered, name, phone });
+                    localStorage.setItem('sf_registered_users', JSON.stringify(users));
+                }
+
                 document.getElementById('login-modal').style.display = 'none';
                 document.getElementById('client-name').value = name;
                 document.getElementById('client-phone').value = phone;
 
-                // Send registration notification to company email
                 const contactInfo = JSON.parse(localStorage.getItem('sf_contact_info')) || { email: "tin23_angela@gmail.com" };
                 console.log(`[Email Notification Sent to ${contactInfo.email}] New user registered: Name: ${name}, Phone: ${phone}`);
             }
@@ -885,6 +943,45 @@
             }
         }
 
+        function renderRegisteredUsers() {
+            const tbody = document.getElementById('registered-users-table-body');
+            const users = getRegisteredUsers();
+
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #777;">No registered users yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.dateRegistered}</td>
+                    <td><strong>${user.name}</strong></td>
+                    <td>${user.phone}</td>
+                </tr>
+            `).join('');
+        }
+
+        function exportRegisteredUsersCSV() {
+            const users = getRegisteredUsers();
+            if (users.length === 0) {
+                alert("No registered users to export.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Registration Date,Full Name,Phone Number\r\n";
+            users.forEach(user => {
+                csvContent += `"${user.dateRegistered}","${user.name}","${user.phone}"\r\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "registered_users_simply_fab.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         function renderCatalog() {
             const grid = document.getElementById('catalog-grid');
             const selectedColor = document.getElementById('filter-color').value;
@@ -899,24 +996,29 @@
             }
 
             if (gowns.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No gowns match the selected color and size filters.</p>`;
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses match the selected color and size filters.</p>`;
                 return;
             }
 
             grid.innerHTML = gowns.map(gown => {
                 const images = gown.images || [gown.img];
-                const imgHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}">`).join('');
-                const carouselControls = images.length > 1 ? `
-                    <button class="carousel-btn prev" onclick="slideImage(${gown.id}, -1)">&#10094;</button>
-                    <button class="carousel-btn next" onclick="slideImage(${gown.id}, 1)">&#10095;</button>
+                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}">`).join('');
+                if (gown.video) {
+                    mediaHtml += `<video src="${gown.video}" controls muted></video>`;
+                }
+
+                const totalSlides = images.length + (gown.video ? 1 : 0);
+                const carouselControls = totalSlides > 1 ? `
+                    <button class="carousel-btn prev" onclick="slideMedia(${gown.id}, -1)">&#10094;</button>
+                    <button class="carousel-btn next" onclick="slideMedia(${gown.id}, 1)">&#10095;</button>
                 ` : '';
 
                 return `
                     <div class="card" id="card-${gown.id}">
                         <button class="btn-delete-item" onclick="deleteGown(${gown.id})" title="Delete item">×</button>
-                        <div class="carousel-container" data-index="0" data-total="${images.length}">
+                        <div class="carousel-container" data-index="0" data-total="${totalSlides}">
                             <div class="carousel-track" id="track-${gown.id}">
-                                ${imgHtml}
+                                ${mediaHtml}
                             </div>
                             ${carouselControls}
                         </div>
@@ -935,14 +1037,16 @@
             }).join('');
         }
 
-        function slideImage(gownId, direction) {
+        function slideMedia(gownId, direction) {
             const card = document.getElementById(`card-${gownId}`);
             const container = card.querySelector('.carousel-container');
             const track = document.getElementById(`track-${gownId}`);
             let currentIndex = parseInt(container.getAttribute('data-index'));
-            let totalImages = parseInt(container.getAttribute('data-total'));
+            let totalSlides = parseInt(container.getAttribute('data-total'));
 
-            currentIndex = (currentIndex + direction + totalImages) % totalImages;
+            track.querySelectorAll('video').forEach(v => v.pause());
+
+            currentIndex = (currentIndex + direction + totalSlides) % totalSlides;
             container.setAttribute('data-index', currentIndex);
             
             track.style.transform = `translateX(-${currentIndex * 100}%)`;
@@ -984,7 +1088,7 @@
             const totalDisplay = document.getElementById('cart-total-display');
 
             if (cart.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Your cart is empty. Add a gown from the catalog above!</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Your cart is empty. Add a dress from the catalog above!</td></tr>`;
                 totalDisplay.textContent = "0.00";
                 return;
             }
@@ -1109,9 +1213,10 @@
             if (user === "SimplyFab") {
                 const pin = prompt("Enter Admin Password:");
                 if (pin === "021910") {
-                    const panels = ['admin-panel-catalog', 'admin-panel-qrs', 'admin-panel-tracker', 'admin-panel-contact'];
+                    const panels = ['admin-panel-catalog', 'admin-panel-users', 'admin-panel-qrs', 'admin-panel-tracker', 'admin-panel-contact'];
                     panels.forEach(id => document.getElementById(id).classList.toggle('active'));
                     document.getElementById('body-root').classList.toggle('admin-mode');
+                    renderRegisteredUsers();
                     alert("Admin mode unlocked successfully!");
                 } else if (pin !== null) {
                     alert("Incorrect password.");
@@ -1125,10 +1230,14 @@
             event.preventDefault();
             const name = document.getElementById('new-name').value;
             const desc = document.getElementById('new-desc').value;
-            const price = parseFloat(document.getElementById('new-price').value).toFixed(2);
+            const priceVndInput = parseFloat(document.getElementById('new-price-vnd').value);
+            
+            const pricePhp = (priceVndInput * VND_TO_PHP_RATE).toFixed(2);
+
             const color = document.getElementById('new-color').value;
             const size = document.getElementById('new-size').value;
             const fileInput = document.getElementById('new-imgs');
+            const videoInput = document.getElementById('new-video');
 
             const files = Array.from(fileInput.files);
             if (files.length < 3) {
@@ -1137,34 +1246,56 @@
             }
 
             let loadedImages = [];
-            let processed = 0;
+            let loadedVideo = "";
+            let processedImages = 0;
+
+            function finalizeGown() {
+                const gowns = getGowns();
+                const newGown = {
+                    id: Date.now(),
+                    name,
+                    desc,
+                    price: pricePhp,
+                    color,
+                    size,
+                    images: loadedImages,
+                    video: loadedVideo
+                };
+
+                gowns.unshift(newGown);
+                localStorage.setItem('sf_gowns_catalog', JSON.stringify(gowns));
+                renderCatalog();
+                event.target.reset();
+                alert(`New dress published successfully!\nConverted ${priceVndInput.toLocaleString()} VND to ₱${pricePhp} PHP.`);
+            }
+
+            if (videoInput.files && videoInput.files[0]) {
+                const videoReader = new FileReader();
+                videoReader.onload = function(e) {
+                    loadedVideo = e.target.result;
+                    checkCompletion();
+                };
+                videoReader.readAsDataURL(videoInput.files[0]);
+            } else {
+                checkCompletion();
+            }
 
             files.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     loadedImages[index] = e.target.result;
-                    processed++;
-                    if (processed === files.length) {
-                        const gowns = getGowns();
-                        const newGown = {
-                            id: Date.now(),
-                            name,
-                            desc,
-                            price,
-                            color,
-                            size,
-                            images: loadedImages
-                        };
-
-                        gowns.unshift(newGown);
-                        localStorage.setItem('sf_gowns_catalog', JSON.stringify(gowns));
-                        renderCatalog();
-                        event.target.reset();
-                        alert("New gown with multiple pictures published successfully!");
-                    }
+                    processedImages++;
+                    checkCompletion();
                 };
                 reader.readAsDataURL(file);
             });
+
+            function checkCompletion() {
+                const videoReady = (!videoInput.files[0] || loadedVideo !== "");
+                if (processedImages === files.length && videoReady) {
+                    finalizeGown();
+                }
+            }
         }
 
         function handleUpdateContact(event) {
@@ -1183,7 +1314,7 @@
         function handleCheckout(event) {
             event.preventDefault();
             if (cart.length === 0) {
-                alert("Your cart is empty! Please select at least one gown.");
+                alert("Your cart is empty! Please select at least one dress.");
                 return;
             }
 
@@ -1230,7 +1361,7 @@
         }
 
         function deleteGown(id) {
-            if (confirm("Remove this gown from catalog?")) {
+            if (confirm("Remove this dress from catalog?")) {
                 let gowns = getGowns();
                 gowns = gowns.filter(g => g.id !== id);
                 localStorage.setItem('sf_gowns_catalog', JSON.stringify(gowns));
@@ -1243,6 +1374,7 @@
         renderCatalog();
         renderCart();
         renderTracker();
+        renderRegisteredUsers();
         loadContactInfo();
         loadQRs();
     </script>
