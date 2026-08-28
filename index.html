@@ -767,7 +767,23 @@
         <p style="margin-top: 15px; font-size: 11px; color: #aaa;">&copy; 2026 SimplyFab Dress Catalogue. All rights reserved.</p>
     </footer>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5JeXosMT6e5xYcDTJNdPKPjKF5tRcf5Y",
+            authDomain: "simplyfab2-0.firebaseapp.com",
+            projectId: "simplyfab2-0",
+            storageBucket: "simplyfab2-0.firebasestorage.app",
+            messagingSenderId: "793548467748",
+            appId: "1:793548467748:web:aa219020e01e7f77e332b1",
+            measurementId: "G-9SW6XLGR6P"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         // Exact Conversion Ratio: 800 VND = 2 PHP -> 1 VND = 2 / 800 PHP (0.0025)
         const VND_TO_PHP_RATIO = 2 / 800;
 
@@ -815,11 +831,7 @@
         ];
 
         let cart = [];
-
-        function getGowns() {
-            const saved = localStorage.getItem('sf_gowns_catalog');
-            return saved ? JSON.parse(saved) : defaultGowns;
-        }
+        let liveGownsCatalog = [];
 
         function getInquiries() {
             const saved = localStorage.getItem('sf_inquiries_tracker');
@@ -831,20 +843,19 @@
             return saved ? JSON.parse(saved) : [];
         }
 
-        function previewPhpConversion() {
+        window.previewPhpConversion = function() {
             const vndInput = parseFloat(document.getElementById('new-price-vnd').value) || 0;
             const phpValue = vndInput * VND_TO_PHP_RATIO;
             document.getElementById('vnd-conversion-preview').textContent = 
                 `Equivalent: ₱${phpValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} PHP (Rate: 800 VND = 2 PHP)`;
         }
 
-        function handleVisitorLogin(event) {
+        window.handleVisitorLogin = function(event) {
             event.preventDefault();
             const name = document.getElementById('visitor-name').value.trim();
             const phone = document.getElementById('visitor-phone').value.trim();
             
             if (name && phone) {
-                // Check if user credentials match the Admin profile
                 if (name.toLowerCase() === ADMIN_NAME.toLowerCase() && phone === ADMIN_PHONE) {
                     localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone, isAdmin: true }));
                     document.getElementById('login-modal').style.display = 'none';
@@ -854,9 +865,7 @@
                     return;
                 }
 
-                // Regular User Login Flow
                 const dateRegistered = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                
                 localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone, isAdmin: false }));
                 
                 let users = getRegisteredUsers();
@@ -868,9 +877,6 @@
                 document.getElementById('login-modal').style.display = 'none';
                 document.getElementById('client-name').value = name;
                 document.getElementById('client-phone').value = phone;
-
-                const contactInfo = JSON.parse(localStorage.getItem('sf_contact_info')) || { email: "tin23_angela@gmail.com" };
-                console.log(`[Email Notification Sent to ${contactInfo.email}] New user registered: Name: ${name}, Phone: ${phone}`);
             }
         }
 
@@ -905,7 +911,7 @@
             renderTracker();
         }
 
-        function toggleAdminPanel() {
+        window.toggleAdminPanel = function() {
             const panels = ['admin-panel-catalog', 'admin-panel-users', 'admin-panel-qrs', 'admin-panel-tracker', 'admin-panel-contact'];
             const firstPanel = document.getElementById('admin-panel-catalog');
             const isActive = firstPanel ? firstPanel.classList.contains('active') : false;
@@ -945,7 +951,7 @@
             `).join('');
         }
 
-        function exportRegisteredUsersCSV() {
+        window.exportRegisteredUsersCSV = function() {
             const users = getRegisteredUsers();
             if (users.length === 0) {
                 alert("No registered users to export.");
@@ -969,7 +975,7 @@
         function renderCatalog() {
             const grid = document.getElementById('catalog-grid');
             if (!grid) return;
-            let gowns = getGowns();
+            let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
 
             if (gowns.length === 0) {
                 grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog.</p>`;
@@ -985,13 +991,13 @@
 
                 const totalSlides = images.length + (gown.video ? 1 : 0);
                 const carouselControls = totalSlides > 1 ? `
-                    <button class="carousel-btn prev" onclick="slideMedia(${gown.id}, -1)">&#10094;</button>
-                    <button class="carousel-btn next" onclick="slideMedia(${gown.id}, 1)">&#10095;</button>
+                    <button class="carousel-btn prev" onclick="slideMedia('${gown.id}', -1)">&#10094;</button>
+                    <button class="carousel-btn next" onclick="slideMedia('${gown.id}', 1)">&#10095;</button>
                 ` : '';
 
                 return `
                     <div class="card" id="card-${gown.id}">
-                        <button class="btn-delete-item" onclick="deleteGown(${gown.id})" title="Delete item">×</button>
+                        <button class="btn-delete-item" onclick="deleteGown('${gown.id}')" title="Delete item">×</button>
                         <div class="carousel-container" data-index="0" data-total="${totalSlides}">
                             <div class="carousel-track" id="track-${gown.id}">
                                 ${mediaHtml}
@@ -1002,14 +1008,14 @@
                             <h3>${gown.name}</h3>
                             <p>${gown.desc}</p>
                             <div class="price">₱${parseFloat(gown.price).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
-                            <button class="btn-cart" onclick="addToCart(${gown.id})">Add to Cart 🛍️</button>
+                            <button class="btn-cart" onclick="addToCart('${gown.id}')">Add to Cart 🛍️</button>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function slideMedia(gownId, direction) {
+        window.slideMedia = function(gownId, direction) {
             const card = document.getElementById(`card-${gownId}`);
             if (!card) return;
             const container = card.querySelector('.carousel-container');
@@ -1025,10 +1031,11 @@
             track.style.transform = `translateX(-${currentIndex * 100}%)`;
         }
 
-        function addToCart(id) {
-            const gowns = getGowns();
-            const gown = gowns.find(g => g.id === id);
-            const existing = cart.find(item => item.id === id);
+        window.addToCart = function(id) {
+            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
+            const gown = gowns.find(g => String(g.id) === String(id));
+            if (!gown) return;
+            const existing = cart.find(item => String(item.id) === String(id));
 
             if (existing) {
                 existing.qty += 1;
@@ -1040,19 +1047,19 @@
             alert(`"${gown.name}" has been added to your cart!`);
         }
 
-        function updateCartQty(id, delta) {
-            const item = cart.find(i => i.id === id);
+        window.updateCartQty = function(id, delta) {
+            const item = cart.find(i => String(i.id) === String(id));
             if (item) {
                 item.qty += delta;
                 if (item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== id);
+                    cart = cart.filter(i => String(i.id) !== String(id));
                 }
             }
             renderCart();
         }
 
-        function removeFromCart(id) {
-            cart = cart.filter(i => i.id !== id);
+        window.removeFromCart = function(id) {
+            cart = cart.filter(i => String(i.id) !== String(id));
             renderCart();
         }
 
@@ -1075,12 +1082,12 @@
                     <tr>
                         <td><strong>${item.name}</strong> - ${item.desc}</td>
                         <td>
-                            <button type="button" onclick="updateCartQty(${item.id}, -1)" style="padding: 2px 6px;">-</button>
+                            <button type="button" onclick="updateCartQty('${item.id}', -1)" style="padding: 2px 6px;">-</button>
                             <span style="margin: 0 6px;">${item.qty}</span>
-                            <button type="button" onclick="updateCartQty(${item.id}, 1)" style="padding: 2px 6px;">+</button>
+                            <button type="button" onclick="updateCartQty('${item.id}', 1)" style="padding: 2px 6px;">+</button>
                         </td>
                         <td>₱${itemTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                        <td><button type="button" class="btn-action" onclick="removeFromCart(${item.id})" style="color: #a00; border:none; background:none; font-weight:bold; cursor:pointer;">×</button></td>
+                        <td><button type="button" class="btn-action" onclick="removeFromCart('${item.id}')" style="color: #a00; border:none; background:none; font-weight:bold; cursor:pointer;">×</button></td>
                     </tr>
                 `;
             }).join('');
@@ -1088,7 +1095,7 @@
             totalDisplay.textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2});
         }
 
-        function handlePaymentChange() {
+        window.handlePaymentChange = function() {
             const method = document.getElementById('payment-method').value;
             const qrBox = document.getElementById('qr-box-container');
             const qrImg = document.getElementById('checkout-qr-img');
@@ -1110,7 +1117,7 @@
             }
         }
 
-        function uploadQR(type, event) {
+        window.uploadQR = function(type, event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
@@ -1183,12 +1190,11 @@
             if (document.getElementById('admin-phone')) document.getElementById('admin-phone').value = contactInfo.phone;
         }
 
-        function handleAddNewGown(event) {
+        window.handleAddNewGown = async function(event) {
             event.preventDefault();
             const name = document.getElementById('new-name').value;
             const desc = document.getElementById('new-desc').value;
             const priceVndInput = parseFloat(document.getElementById('new-price-vnd').value) || 0;
-            
             const pricePhp = (priceVndInput * VND_TO_PHP_RATIO).toFixed(2);
 
             const fileInput = document.getElementById('new-imgs');
@@ -1204,23 +1210,25 @@
             let loadedVideo = "";
             let processedImages = 0;
 
-            function finalizeGown() {
-                const gowns = getGowns();
+            async function finalizeGown() {
                 const newGown = {
-                    id: Date.now(),
                     name,
                     desc,
                     price: pricePhp,
                     images: loadedImages,
-                    video: loadedVideo
+                    video: loadedVideo,
+                    createdAt: Date.now()
                 };
 
-                gowns.unshift(newGown);
-                localStorage.setItem('sf_gowns_catalog', JSON.stringify(gowns));
-                renderCatalog();
-                event.target.reset();
-                previewPhpConversion();
-                alert(`New dress published successfully!\nConverted ${priceVndInput.toLocaleString()} VND to ₱${pricePhp} PHP.`);
+                try {
+                    await addDoc(collection(db, "gowns_catalog"), newGown);
+                    event.target.reset();
+                    previewPhpConversion();
+                    alert(`New dress published successfully to Firebase!\nConverted ${priceVndInput.toLocaleString()} VND to ₱${pricePhp} PHP.`);
+                } catch (e) {
+                    console.error("Error adding document to Firebase: ", e);
+                    alert("Error publishing dress to database. Check console.");
+                }
             }
 
             if (videoInput.files && videoInput.files[0]) {
@@ -1252,7 +1260,7 @@
             }
         }
 
-        function handleUpdateContact(event) {
+        window.handleUpdateContact = function(event) {
             event.preventDefault();
             const web = document.getElementById('admin-web').value;
             const email = document.getElementById('admin-email').value;
@@ -1265,7 +1273,7 @@
             alert("Contact details updated successfully!");
         }
 
-        function handleCheckout(event) {
+        window.handleCheckout = function(event) {
             event.preventDefault();
             if (cart.length === 0) {
                 alert("Your cart is empty! Please select at least one dress.");
@@ -1305,7 +1313,7 @@
             handlePaymentChange();
         }
 
-        function updateStatus(id, newStatus) {
+        window.updateStatus = function(id, newStatus) {
             let inquiries = getInquiries();
             const order = inquiries.find(i => i.id === id);
             if (order) {
@@ -1314,18 +1322,36 @@
             }
         }
 
-        function deleteGown(id) {
+        window.deleteGown = async function(id) {
             if (confirm("Remove this dress from catalog?")) {
-                let gowns = getGowns();
-                gowns = gowns.filter(g => g.id !== id);
-                localStorage.setItem('sf_gowns_catalog', JSON.stringify(gowns));
-                renderCatalog();
+                try {
+                    await deleteDoc(doc(db, "gowns_catalog", id));
+                    alert("Dress removed from Firebase successfully!");
+                } catch (e) {
+                    console.error("Error removing document: ", e);
+                    alert("Failed to delete from database.");
+                }
             }
+        }
+
+        // Real-time synchronization listener for Firestore
+        function initRealtimeCatalog() {
+            onSnapshot(collection(db, "gowns_catalog"), (snapshot) => {
+                let gowns = [];
+                snapshot.forEach((docSnap) => {
+                    gowns.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                
+                liveGownsCatalog = gowns;
+                renderCatalog();
+            }, (error) => {
+                console.error("Error listening to Firestore catalog changes: ", error);
+            });
         }
 
         // Initialize state on load
         checkVisitorSession();
-        renderCatalog();
+        initRealtimeCatalog();
         renderCart();
         renderTracker();
         renderRegisteredUsers();
