@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
+    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -449,12 +450,18 @@
             background-color: #28a745;
             color: white;
             border: none;
-            padding: 10px 20px;
-            font-size: 14px;
+            padding: 12px 20px;
+            font-size: 15px;
             font-weight: 700;
             border-radius: 6px;
             cursor: pointer;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(40,167,69,0.2);
+        }
+
+        .btn-sync:hover {
+            background-color: #218838;
         }
 
         footer {
@@ -469,10 +476,12 @@
 </head>
 <body id="body-root">
 
+    <!-- Lightbox Modal -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="Enlarged Dress Design">
     </div>
 
+    <!-- Simple Login Modal -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -487,6 +496,7 @@
         </div>
     </div>
 
+    <!-- Messenger Floating Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
 
     <nav>
@@ -497,7 +507,7 @@
         <ul class="nav-links">
             <li><a href="#home">Home</a></li>
             <li><a href="#catalog">Dress Collection</a></li>
-            <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" type="button">🔒 Admin Console</button></li>
+            <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" type="button" onclick="toggleAdminPanel()">🔒 Admin Console</button></li>
         </ul>
     </nav>
 
@@ -512,11 +522,12 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
+        <!-- Admin Panel for Adding Items & Syncing -->
         <div id="admin-panel-catalog" class="admin-panel">
-            <h3>⚙️ Admin Console & Sync</h3>
+            <h3>⚙️ Admin Console & Data Migration</h3>
             <button type="button" class="btn-sync" onclick="migrateLocalToSupabase()">🔄 Migrate Firebase Items to Supabase Now</button>
             
-            <h3 style="margin-top: 15px;">Add New Dress Item</h3>
+            <h3 style="margin-top: 20px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item</h3>
             <form id="add-gown-form">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
@@ -545,6 +556,7 @@
             </form>
         </div>
 
+        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -582,6 +594,11 @@
             document.getElementById('image-lightbox').classList.remove('active');
         };
 
+        window.toggleAdminPanel = function() {
+            const panel = document.getElementById('admin-panel-catalog');
+            if (panel) panel.classList.toggle('active');
+        };
+
         async function fetchCatalog() {
             const { data, error } = await supabaseClient
                 .from('gowns_catalog')
@@ -597,7 +614,6 @@
                 liveGownsCatalog = data;
                 renderCatalog();
             } else {
-                // If Supabase table is empty, fall back to local browser backup so items aren't lost
                 const localBackup = localStorage.getItem('sf_local_catalog_backup');
                 if (localBackup) {
                     try {
@@ -615,7 +631,7 @@
             if (!grid) return;
 
             if (liveGownsCatalog.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog yet. Log in as Admin and click Migrate or Add New Dress.</p>`;
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog yet. Click the Admin Console at the top right to Migrate items or Add new dresses.</p>`;
                 return;
             }
 
@@ -658,11 +674,10 @@
             }).join('');
         }
 
-        // Migrate local/Firebase backup items into Supabase
         window.migrateLocalToSupabase = async function() {
             const localBackup = localStorage.getItem('sf_local_catalog_backup');
             if (!localBackup) {
-                alert("No local items found to migrate.");
+                alert("No local items found in backup to migrate.");
                 return;
             }
 
