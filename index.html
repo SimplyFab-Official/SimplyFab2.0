@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
+    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -545,10 +546,12 @@
 </head>
 <body id="body-root">
 
+    <!-- Lightbox Modal -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="">
     </div>
 
+    <!-- Visitor Login Modal (Disguised Admin Gate) -->
     <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -567,6 +570,7 @@
         </div>
     </div>
 
+    <!-- Messenger Floating Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
 
     <nav>
@@ -591,10 +595,12 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
+        <!-- Search Bar for Users and Admin -->
         <div class="search-bar-container">
             <input type="text" id="search-input" placeholder="🔍 Search Item Code (e.g. SF0001)..." oninput="filterCatalog()">
         </div>
 
+        <!-- Admin Panel for Staging Items & Publishing -->
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>Add New Dress Item</h3>
             <form id="add-gown-form">
@@ -639,6 +645,7 @@
             </div>
         </div>
 
+        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -759,7 +766,9 @@
 
             grid.innerHTML = itemsToRender.map((gown) => {
                 const itemId = gown.id;
-                let storedPrice = parseFloat(gown.price) || 0;
+                let vndValue = parseFloat(gown.price_vnd) || 0;
+                let markupVal = 700; // default markup since database uses price_vnd column
+                let userPhpPrice = calculatePhpPrice(vndValue, markupVal);
                 let images = Array.isArray(gown.images) ? gown.images : [];
 
                 let slidesHtml = images.map(imgUrl => `
@@ -785,7 +794,8 @@
                         </div>
                         <div class="card-body">
                             <p><strong>Size Availability:</strong> ${gown.desc || ''}</p>
-                            <div class="price">₱${storedPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div class="price-details">Original Price: ₫${vndValue.toLocaleString('en-US')} (+₱${markupVal} markup)</div>
+                            <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
                             <div class="admin-price-box">
                                 <label>Edit Size:</label>
@@ -796,9 +806,9 @@
                                         <option value="Small, Medium and Large" ${gown.desc === 'Small, Medium and Large' ? 'selected' : ''}>Small, Medium and Large</option>
                                     </select>
                                 </div>
-                                <label>Edit Final PHP Price (₱):</label>
+                                <label>Edit VND Price (₫):</label>
                                 <div class="admin-price-input-group">
-                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(storedPrice)}" step="0.01">
+                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}">
                                 </div>
                                 <label>Replace Pictures (3+ required if changing):</label>
                                 <div class="admin-price-input-group">
@@ -828,10 +838,10 @@
 
             wrapper.style.display = 'block';
             list.innerHTML = stagedItems.map((item, index) => {
-                let computedTotal = calculatePhpPrice(item.price, item.markup);
+                let computedTotal = calculatePhpPrice(item.price_vnd, item.markup_peso);
                 return `
                     <div class="staged-item-row">
-                        <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | Total: <strong>₱${computedTotal.toFixed(2)}</strong> [${item.images.length} photos]</span>
+                        <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | ₫${item.price_vnd.toLocaleString()} + ₱${item.markup_peso} = <strong>₱${computedTotal.toFixed(2)}</strong> [${item.images.length} photos]</span>
                         <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
                     </div>
                 `;
@@ -853,12 +863,12 @@
 
             try {
                 for (const item of stagedItems) {
-                    const finalComputedPrice = calculatePhpPrice(item.price, item.markup);
-                    
+                    // Match exact DB columns: id, name, desc, price_vnd, images
                     const payload = {
                         id: item.id,
+                        name: item.id,
                         desc: item.desc,
-                        price: finalComputedPrice,
+                        price_vnd: item.price_vnd,
                         images: item.images
                     };
 
@@ -897,8 +907,8 @@
             e.preventDefault();
             const id = document.getElementById('new-custom-id').value;
             const desc = document.getElementById('new-desc').value;
-            const price = parseFloat(document.getElementById('new-price-vnd').value) || 0;
-            const markup = parseFloat(document.getElementById('new-markup-peso').value) || 700;
+            const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
+            const markup_peso = parseFloat(document.getElementById('new-markup-peso').value) || 700;
             const fileInput = document.getElementById('new-imgs');
             
             if (fileInput.files.length < 3) {
@@ -908,7 +918,7 @@
 
             try {
                 const images = await convertFilesToBasePath(fileInput.files);
-                const newItem = { id, desc, price, markup, images };
+                const newItem = { id, desc, price_vnd, markup_peso, images };
 
                 stagedItems.push(newItem);
                 localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
@@ -928,10 +938,10 @@
             const descInput = document.getElementById(`desc-input-${id}`);
             const priceInput = document.getElementById(`vnd-input-${id}`);
             const desc = descInput ? descInput.value : '';
-            const finalPhpPrice = priceInput ? parseFloat(priceInput.value) || 0 : 0;
+            const price_vnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
             const fileInput = document.getElementById(`img-input-${id}`);
 
-            let updatePayload = { desc, price: finalPhpPrice };
+            let updatePayload = { desc, price_vnd, name: id };
 
             try {
                 if (fileInput && fileInput.files.length > 0) {
@@ -976,7 +986,6 @@
             }
         };
 
-        // FIXED: Robust Login Form Handler allowing both Admin and Guest sign-ins correctly
         document.getElementById('admin-auth-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const usernameInput = document.getElementById('admin-user-input');
