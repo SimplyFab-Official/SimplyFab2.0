@@ -246,6 +246,14 @@
             font-size: 18px;
         }
 
+        .markup-settings-box {
+            background: #fdf6f6;
+            border: 1px dashed var(--primary);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
         .admin-form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) auto;
@@ -387,7 +395,7 @@
         .card-body p {
             color: var(--text-light);
             font-size: 14px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .price-details {
@@ -592,6 +600,21 @@
 
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>⚙️ Admin Management Console</h3>
+            
+            <div class="markup-settings-box">
+                <h4 style="margin: 0 0 10px 0; color: var(--primary);">💱 Global Currency & Markup Settings</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="global-ratio">VND to PHP Multiplier Ratio (Default 2/800):</label>
+                        <input type="number" id="global-ratio" class="form-control" value="0.0025" step="0.0001" oninput="saveGlobalMarkupSettings()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="global-markup">Default Additional Markup (₱):</label>
+                        <input type="number" id="global-markup" class="form-control" value="700" step="1" oninput="saveGlobalMarkupSettings()">
+                    </div>
+                </div>
+            </div>
+
             <button type="button" class="btn-publish" onclick="publishStagedItems()">🚀 Publish to Catalog (<span id="staged-count">0</span> items ready)</button>
             
             <h3 style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item</h3>
@@ -613,10 +636,6 @@
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-price-vnd">Price VND (₫):</label>
                         <input type="number" id="new-price-vnd" class="form-control" placeholder="720000" step="1" required oninput="previewPhpCalculation()">
-                    </div>
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label for="new-markup-peso">Markup (₱):</label>
-                        <input type="number" id="new-markup-peso" class="form-control" value="700" step="1" required oninput="previewPhpCalculation()">
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-imgs">Pictures (3+):</label>
@@ -650,25 +669,40 @@
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const VND_TO_PHP_RATIO = 2 / 800;
         const ADMIN_NAME = "SimplyFab";
         const ADMIN_CODE = "021910";
 
         let liveGownsCatalog = [];
         let stagedItems = JSON.parse(localStorage.getItem('simplyfab_staged_items')) || [];
 
-        function calculatePhpPrice(vnd, markup) {
+        // Load saved global settings or defaults
+        let globalSettings = JSON.parse(localStorage.getItem('simplyfab_global_settings')) || {
+            ratio: 2 / 800,
+            markup: 700
+        };
+
+        document.getElementById('global-ratio').value = globalSettings.ratio;
+        document.getElementById('global-markup').value = globalSettings.markup;
+
+        window.saveGlobalMarkupSettings = function() {
+            const ratioVal = parseFloat(document.getElementById('global-ratio').value) || 0.0025;
+            const markupVal = parseFloat(document.getElementById('global-markup').value) || 0;
+            globalSettings = { ratio: ratioVal, markup: markupVal };
+            localStorage.setItem('simplyfab_global_settings', JSON.stringify(globalSettings));
+            renderCatalog(liveGownsCatalog);
+            previewPhpCalculation();
+        };
+
+        function calculatePhpPrice(vnd) {
             const baseVnd = parseFloat(vnd) || 0;
-            const markupPeso = parseFloat(markup) || 0;
-            return (baseVnd * VND_TO_PHP_RATIO) + markupPeso;
+            return (baseVnd * globalSettings.ratio) + globalSettings.markup;
         }
 
         window.previewPhpCalculation = function() {
             const inputVal = document.getElementById('new-price-vnd').value;
-            const markupVal = document.getElementById('new-markup-peso').value;
             const previewEl = document.getElementById('calc-preview');
-            const calculated = calculatePhpPrice(inputVal, markupVal);
-            previewEl.textContent = `PHP Total (Calculated + ₱${markupVal || 0}): ₱${calculated.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            const calculated = calculatePhpPrice(inputVal);
+            previewEl.textContent = `PHP Total (VND converted + ₱${globalSettings.markup} markup): ₱${calculated.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         };
 
         window.openLightbox = function(imgSrc) {
@@ -751,8 +785,7 @@
             grid.innerHTML = itemsToRender.map((gown) => {
                 const itemId = gown.id;
                 let vndValue = parseFloat(gown.price_vnd || gown.priceVnd) || 0;
-                let markupVal = gown.markup_peso !== undefined ? parseFloat(gown.markup_peso) : 700;
-                let userPhpPrice = calculatePhpPrice(vndValue, markupVal);
+                let userPhpPrice = calculatePhpPrice(vndValue);
                 let images = Array.isArray(gown.images) ? gown.images : [];
 
                 let slidesHtml = images.map(imgUrl => `
@@ -778,7 +811,7 @@
                         </div>
                         <div class="card-body">
                             <p><strong>Size Availability:</strong> ${gown.desc || ''}</p>
-                            <div class="price-details">Original: ₫${vndValue.toLocaleString('en-US')}</div>
+                            <div class="price-details">Original Price: ₫${vndValue.toLocaleString('en-US')}</div>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
                             <div class="admin-price-box">
@@ -793,10 +826,6 @@
                                 <label>Edit VND Price (₫):</label>
                                 <div class="admin-price-input-group">
                                     <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}">
-                                </div>
-                                <label>Edit Markup (₱):</label>
-                                <div class="admin-price-input-group">
-                                    <input type="number" id="markup-input-${itemId}" value="${markupVal}">
                                 </div>
                                 <label>Replace Pictures (3+ required if changing):</label>
                                 <div class="admin-price-input-group">
@@ -826,7 +855,7 @@
             wrapper.style.display = 'block';
             list.innerHTML = stagedItems.map((item, index) => `
                 <div class="staged-item-row">
-                    <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | ₫${item.price_vnd.toLocaleString()} + ₱${item.markup_peso} = <strong>₱${calculatePhpPrice(item.price_vnd, item.markup_peso).toFixed(2)}</strong> [${item.images.length} photos]</span>
+                    <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | ₫${item.price_vnd.toLocaleString()} → <strong>₱${calculatePhpPrice(item.price_vnd).toFixed(2)}</strong> [${item.images.length} photos]</span>
                     <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
                 </div>
             `).join('');
@@ -877,7 +906,6 @@
             const name = "Dress";
             const desc = document.getElementById('new-desc').value;
             const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
-            const markup_peso = parseFloat(document.getElementById('new-markup-peso').value) || 0;
             const fileInput = document.getElementById('new-imgs');
             
             if (fileInput.files.length < 3) {
@@ -887,14 +915,13 @@
 
             try {
                 const images = await convertFilesToBasePath(fileInput.files);
-                const newItem = { id, name, desc, price_vnd, markup_peso, images };
+                const newItem = { id, name, desc, price_vnd, images };
 
                 stagedItems.push(newItem);
                 localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
 
                 alert(`Item ${id} added to staged list below! Click 'Publish to Catalog' when you are ready.`);
                 e.target.reset();
-                document.getElementById('new-markup-peso').value = "700";
                 document.getElementById('calc-preview').textContent = "PHP Total: ₱0.00";
                 renderStagedList();
                 generateNextItemCode();
@@ -906,14 +933,12 @@
         window.saveInlineItem = async function(id) {
             const descInput = document.getElementById(`desc-input-${id}`);
             const priceInput = document.getElementById(`vnd-input-${id}`);
-            const markupInput = document.getElementById(`markup-input-${id}`);
             
             const desc = descInput ? descInput.value : '';
             const price_vnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
-            const markup_peso = markupInput ? parseFloat(markupInput.value) || 0 : 700;
             const fileInput = document.getElementById(`img-input-${id}`);
 
-            let updatePayload = { desc, price_vnd, markup_peso };
+            let updatePayload = { desc, price_vnd };
 
             try {
                 if (fileInput && fileInput.files.length > 0) {
