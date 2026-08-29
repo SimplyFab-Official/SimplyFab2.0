@@ -486,4 +486,319 @@
             <form id="visitor-login-form">
                 <div class="form-group" style="text-align: left;">
                     <label for="visitor-name">Your Name / Admin Code:</label>
-                    <input type="text"
+                    <input type="text" id="visitor-name" class="form-control" placeholder="e.g. Maria or SimplyFab" required>
+                </div>
+                <button type="submit" class="btn-submit" style="background-color: var(--primary);">View Catalog</button>
+            </form>
+        </div>
+    </div>
+
+    <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
+
+    <nav>
+        <a href="#" class="nav-brand">
+            ✨ SimplyFab Dress Catalogue
+            <span class="nav-welcome-tag" id="nav-welcome-message">Welcome, Guest!</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#catalog">Dress Collection</a></li>
+            <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" type="button" onclick="toggleAdminPanel()">🔒 Admin Console</button></li>
+        </ul>
+    </nav>
+
+    <section id="home" class="hero">
+        <h1>Look Stunning. Feel Beautiful.</h1>
+        <p>Explore our exclusive dress collection and view prices instantly.</p>
+        <a href="#catalog" class="btn-primary" style="background: white; color: var(--primary);">Explore Collection</a>
+    </section>
+
+    <div id="catalog" class="container">
+        <div class="section-header-flex">
+            <h2 class="section-title">Featured Dress Collection</h2>
+        </div>
+
+        <div id="admin-panel-catalog" class="admin-panel">
+            <h3>⚙️ Admin Console & Data Migration</h3>
+            <button type="button" class="btn-sync" onclick="migrateLocalToSupabase()">🔄 Push Default Catalog Items to Supabase Now</button>
+            
+            <h3 style="margin-top: 20px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item</h3>
+            <form id="add-gown-form">
+                <div class="admin-form-grid">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-custom-id">Item ID Number:</label>
+                        <input type="text" id="new-custom-id" class="form-control" placeholder="ITEM-0001" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-name">Dress Name:</label>
+                        <input type="text" id="new-name" class="form-control" placeholder="Dress Label" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-desc">Description:</label>
+                        <input type="text" id="new-desc" class="form-control" placeholder="Short description" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-price-vnd">Price VND (₫):</label>
+                        <input type="number" id="new-price-vnd" class="form-control" placeholder="720000" step="1" required>
+                        <small style="color: var(--primary); font-size: 10px; font-weight: bold;" id="vnd-conversion-preview">₱0.00 PHP</small>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-imgs">Pictures (3+):</label>
+                        <input type="file" id="new-imgs" class="form-control" accept="image/*" multiple required style="padding: 4px;">
+                    </div>
+                    <button type="submit" class="btn-submit" style="margin-top:0; height: 40px; background-color: var(--primary);">Save Item</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="catalog-grid" id="catalog-grid">
+            <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
+        </div>
+    </div>
+
+    <footer>
+        <p><strong>SimplyFab Dress Catalogue</strong></p>
+        <p>Email: tin23_angela@gmail.com | Phone: 09954836767</p>
+        <p style="margin-top: 15px; font-size: 11px; color: #aaa;">&copy; 2026 SimplyFab Dress Catalogue. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const SUPABASE_URL = "https://bxqdecdhfjhnuqmstmra.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_fnwDfvYJSTV-2H2tClAtow_NLwXSoL7";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const VND_TO_PHP_RATIO = 2 / 800;
+        const ADMIN_MARKUP = 700;
+        const ADMIN_NAME = "SimplyFab";
+
+        const defaultGowns = [
+            {
+                id: "ITEM-0001",
+                name: "The Aria Ballgown",
+                desc: "Elegant princess-cut ballgown with crystal embellishments.",
+                price_vnd: 720000,
+                images: [
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
+                ]
+            },
+            {
+                id: "ITEM-0002",
+                name: "Velvet Evening Silhouette",
+                desc: "Sleek, form-fitting evening dress designed for gala events.",
+                price_vnd: 600000,
+                images: [
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80"
+                ]
+            },
+            {
+                id: "ITEM-0003",
+                name: "Royal Lace Modern Terno",
+                desc: "Traditional yet modern filipiniana aesthetic for formal occasions.",
+                price_vnd: 920000,
+                images: [
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
+                ]
+            }
+        ];
+
+        let liveGownsCatalog = [];
+
+        function calculatePhpPrice(vnd) {
+            const baseVnd = parseFloat(vnd) || 0;
+            return (baseVnd * VND_TO_PHP_RATIO) + ADMIN_MARKUP;
+        }
+
+        window.openLightbox = function(imgSrc) {
+            document.getElementById('lightbox-img').src = imgSrc;
+            document.getElementById('image-lightbox').classList.add('active');
+        };
+
+        window.closeLightbox = function() {
+            document.getElementById('image-lightbox').classList.remove('active');
+        };
+
+        window.toggleAdminPanel = function() {
+            const panel = document.getElementById('admin-panel-catalog');
+            if (panel) panel.classList.toggle('active');
+        };
+
+        async function fetchCatalog() {
+            const { data, error } = await supabaseClient
+                .from('gowns_catalog')
+                .select('*')
+                .order('id', { ascending: true });
+            
+            if (error) {
+                console.error("Error fetching Supabase data:", error);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                liveGownsCatalog = data;
+                renderCatalog();
+            } else {
+                liveGownsCatalog = defaultGowns;
+                renderCatalog();
+            }
+        }
+
+        function renderCatalog() {
+            const grid = document.getElementById('catalog-grid');
+            if (!grid) return;
+
+            if (liveGownsCatalog.length === 0) {
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog yet.</p>`;
+                return;
+            }
+
+            grid.innerHTML = liveGownsCatalog.map((gown) => {
+                const itemId = gown.id;
+                let vndValue = parseFloat(gown.price_vnd || gown.priceVnd) || 0;
+                let userPhpPrice = calculatePhpPrice(vndValue);
+                let images = gown.images || [];
+
+                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom">`).join('');
+
+                return `
+                    <div class="card" id="card-${itemId}">
+                        <div class="item-badge">${itemId}</div>
+                        <button class="btn-delete-item" onclick="deleteGown('${itemId}')" title="Delete item">×</button>
+                        <div class="carousel-container" data-index="0" data-total="${images.length}">
+                            <div class="carousel-track" id="track-${itemId}">
+                                ${mediaHtml}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h3>${gown.name}</h3>
+                            <p>${gown.desc || ''}</p>
+                            <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            
+                            <div class="admin-price-box">
+                                <label>Edit Name:</label>
+                                <div class="admin-price-input-group">
+                                    <input type="text" id="name-input-${itemId}" value="${gown.name}">
+                                </div>
+                                <label>Edit VND Price (₫):</label>
+                                <div class="admin-price-input-group">
+                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}">
+                                </div>
+                                <button class="btn-save-inline-price" onclick="saveInlineItem('${itemId}')">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.migrateLocalToSupabase = async function() {
+            try {
+                for (const item of defaultGowns) {
+                    await supabaseClient.from('gowns_catalog').upsert(item);
+                }
+                alert("Successfully pushed default items to Supabase!");
+                fetchCatalog();
+            } catch (err) {
+                alert("Migration error: " + err.message);
+            }
+        };
+
+        document.getElementById('add-gown-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('new-custom-id').value.trim().toUpperCase();
+            const name = document.getElementById('new-name').value;
+            const desc = document.getElementById('new-desc').value;
+            const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
+            const fileInput = document.getElementById('new-imgs');
+            
+            if (fileInput.files.length < 3) {
+                alert("Please select at least 3 pictures.");
+                return;
+            }
+
+            let images = [];
+            for (let file of Array.from(fileInput.files)) {
+                const reader = await new Promise(resolve => {
+                    const r = new FileReader();
+                    r.onload = e => resolve(e.target.result);
+                    r.readAsDataURL(file);
+                });
+                images.push(reader);
+            }
+
+            const { error } = await supabaseClient
+                .from('gowns_catalog')
+                .upsert({ id, name, desc, price_vnd, images });
+
+            if (error) {
+                alert("Error saving item: " + error.message);
+            } else {
+                alert(`Item ${id} saved successfully!`);
+                e.target.reset();
+                document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });
+                fetchCatalog();
+            }
+        });
+
+        window.saveInlineItem = async function(id) {
+            const name = document.getElementById(`name-input-${id}`).value;
+            const price_vnd = parseFloat(document.getElementById(`vnd-input-${id}`).value);
+
+            const { error } = await supabaseClient
+                .from('gowns_catalog')
+                .update({ name, price_vnd })
+                .eq('id', id);
+
+            if (error) {
+                alert("Error updating item: " + error.message);
+            } else {
+                alert("Item updated!");
+                fetchCatalog();
+            }
+        };
+
+        window.deleteGown = async function(id) {
+            if (!confirm(`Delete item ${id}?`)) return;
+
+            const { error } = await supabaseClient
+                .from('gowns_catalog')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert("Error deleting item: " + error.message);
+            } else {
+                fetchCatalog();
+            }
+        };
+
+        document.getElementById('visitor-login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('visitor-name').value.trim();
+            if (name.toLowerCase() === ADMIN_NAME.toLowerCase()) {
+                document.getElementById('admin-panel-catalog').classList.add('active');
+                document.getElementById('body-root').classList.add('admin-mode');
+                document.getElementById('admin-toggle-btn-ui').style.display = 'inline-block';
+                alert("Admin mode activated!");
+            }
+            document.getElementById('login-modal').style.display = 'none';
+            document.getElementById('nav-welcome-message').textContent = `Welcome, ${name}!`;
+        });
+
+        supabaseClient
+            .channel('public:gowns_catalog')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'gowns_catalog' }, () => {
+                fetchCatalog();
+            })
+            .subscribe();
+
+        fetchCatalog();
+    </script>
+</body>
+</html>
