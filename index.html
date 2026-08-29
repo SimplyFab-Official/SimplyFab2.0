@@ -970,9 +970,8 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('gowns_catalog')
-                    .select('*')
-                    .order('id', { ascending: true });
-                
+                    .select('*');
+            
                 if (error) {
                     console.error("Supabase fetch error:", error.message);
                     liveGownsCatalog = [];
