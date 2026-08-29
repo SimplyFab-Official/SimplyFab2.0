@@ -572,19 +572,22 @@
             <h3>⚙️ Admin Management Console</h3>
             <button type="button" class="btn-publish" onclick="publishStagedItems()">🚀 Publish to Catalog (<span id="staged-count">0</span> items ready)</button>
             
-            <h3 style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item (Staged Locally)</h3>
+            <h3 style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item (Auto Item Code & Size)</h3>
             <form id="add-gown-form">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
-                        <label for="new-custom-id">Item ID Number:</label>
-                        <input type="text" id="new-custom-id" class="form-control" placeholder="ITEM-0001" required>
-                    </div>
-                    <div class="form-group" style="margin-bottom:0; display:none;">
-                        <input type="hidden" id="new-name" value="Dress">
+                        <label for="new-custom-id">Item ID (Auto):</label>
+                        <input type="text" id="new-custom-id" class="form-control" readonly style="background-color: #f1f1f1; font-weight: bold;">
                     </div>
                     <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
-                        <label for="new-desc">Description:</label>
-                        <input type="text" id="new-desc" class="form-control" placeholder="Short description" required>
+                        <label for="new-desc">Size:</label>
+                        <select id="new-desc" class="form-control" required>
+                            <option value="" disabled selected>Select size</option>
+                            <option value="Small">Small</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Large">Large</option>
+                            <option value="Extra Large">Extra Large</option>
+                        </select>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-price-vnd">Price VND (₫):</label>
@@ -629,9 +632,9 @@
 
         const defaultGowns = [
             {
-                id: "ITEM-0001",
+                id: "00001",
                 name: "Dress",
-                desc: "Elegant princess-cut ballgown with crystal embellishments.",
+                desc: "Small",
                 price_vnd: 720000,
                 images: [
                     "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
@@ -640,9 +643,9 @@
                 ]
             },
             {
-                id: "ITEM-0002",
+                id: "00002",
                 name: "Dress",
-                desc: "Sleek, form-fitting evening dress designed for gala events.",
+                desc: "Medium",
                 price_vnd: 600000,
                 images: [
                     "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
@@ -651,9 +654,9 @@
                 ]
             },
             {
-                id: "ITEM-0003",
+                id: "00003",
                 name: "Dress",
-                desc: "Traditional yet modern filipiniana aesthetic for formal occasions.",
+                desc: "Large",
                 price_vnd: 920000,
                 images: [
                     "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
@@ -688,6 +691,27 @@
             track.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
         };
 
+        // Automatically calculate next running number item code from 00001 based on database + staged items
+        async function generateNextItemCode() {
+            let maxId = 0;
+
+            // Check live catalog ids
+            liveGownsCatalog.forEach(item => {
+                let num = parseInt(item.id, 10);
+                if (!isNaN(num) && num > maxId) maxId = num;
+            });
+
+            // Check staged items ids
+            stagedItems.forEach(item => {
+                let num = parseInt(item.id, 10);
+                if (!isNaN(num) && num > maxId) maxId = num;
+            });
+
+            let nextNum = maxId + 1;
+            let paddedId = String(nextNum).padStart(5, '0');
+            document.getElementById('new-custom-id').value = paddedId;
+        }
+
         async function fetchCatalog() {
             try {
                 const { data, error } = await supabaseClient
@@ -704,6 +728,7 @@
                 liveGownsCatalog = defaultGowns;
             }
             renderCatalog();
+            generateNextItemCode();
         }
 
         function renderCatalog() {
@@ -734,7 +759,7 @@
 
                 return `
                     <div class="card" id="card-${itemId}">
-                        <div class="item-badge">${itemId}</div>
+                        <div class="item-badge">ID: ${itemId}</div>
                         <button class="btn-delete-item" onclick="deleteGown('${itemId}')" title="Delete item">×</button>
                         <div class="carousel-container">
                             <div class="carousel-track" id="track-${itemId}">
@@ -743,7 +768,7 @@
                             ${carouselButtons}
                         </div>
                         <div class="card-body">
-                            <p>${gown.desc || ''}</p>
+                            <p><strong>Size:</strong> ${gown.desc || ''}</p>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
                             <div class="admin-price-box">
@@ -779,7 +804,7 @@
             wrapper.style.display = 'block';
             list.innerHTML = stagedItems.map((item, index) => `
                 <div class="staged-item-row">
-                    <span><strong>${item.id}</strong> - ${item.desc} (₱${calculatePhpPrice(item.price_vnd).toFixed(2)}) [${item.images.length} photos]</span>
+                    <span><strong>ID: ${item.id}</strong> - Size: ${item.desc} (₱${calculatePhpPrice(item.price_vnd).toFixed(2)}) [${item.images.length} photos]</span>
                     <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
                 </div>
             `).join('');
@@ -789,6 +814,7 @@
             stagedItems.splice(index, 1);
             localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
             renderStagedList();
+            generateNextItemCode();
         };
 
         window.publishStagedItems = async function() {
@@ -825,7 +851,7 @@
 
         document.getElementById('add-gown-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('new-custom-id').value.trim().toUpperCase();
+            const id = document.getElementById('new-custom-id').value;
             const name = "Dress";
             const desc = document.getElementById('new-desc').value;
             const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
@@ -846,6 +872,7 @@
                 alert(`Item ${id} added to staged list below! Click 'Publish to Catalog' when you are ready.`);
                 e.target.reset();
                 renderStagedList();
+                generateNextItemCode();
             } catch (err) {
                 alert("Error processing image files: " + err.message);
             }
@@ -897,6 +924,7 @@
             } else {
                 liveGownsCatalog = liveGownsCatalog.filter(gown => gown.id !== id);
                 renderCatalog();
+                generateNextItemCode();
             }
         };
 
@@ -911,6 +939,7 @@
                 document.getElementById('admin-login-modal').style.display = 'none';
                 document.getElementById('nav-welcome-message').textContent = `Welcome, Admin!`;
                 renderStagedList();
+                generateNextItemCode();
             } else {
                 document.getElementById('admin-login-modal').style.display = 'none';
                 document.getElementById('nav-welcome-message').textContent = `Welcome, ${username}!`;
