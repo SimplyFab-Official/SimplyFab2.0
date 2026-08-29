@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
-    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -546,12 +545,10 @@
 </head>
 <body id="body-root">
 
-    <!-- Lightbox Modal -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="">
     </div>
 
-    <!-- Visitor Login Modal (Disguised Admin Gate) -->
     <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -570,7 +567,6 @@
         </div>
     </div>
 
-    <!-- Messenger Floating Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
 
     <nav>
@@ -595,12 +591,10 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
-        <!-- Search Bar for Users and Admin -->
         <div class="search-bar-container">
             <input type="text" id="search-input" placeholder="🔍 Search Item Code (e.g. SF0001)..." oninput="filterCatalog()">
         </div>
 
-        <!-- Admin Panel for Staging Items & Publishing -->
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>Add New Dress Item</h3>
             <form id="add-gown-form">
@@ -645,7 +639,6 @@
             </div>
         </div>
 
-        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -765,9 +758,8 @@
 
             grid.innerHTML = itemsToRender.map((gown) => {
                 const itemId = gown.id;
-                let vndValue = parseFloat(gown.price !== undefined ? gown.price : (gown.price_vnd !== undefined ? gown.price_vnd : 0)) || 0;
-                let markupVal = parseFloat(gown.markup !== undefined ? gown.markup : (gown.markup_peso !== undefined ? gown.markup_peso : 700)) || 0;
-                let userPhpPrice = calculatePhpPrice(vndValue, markupVal);
+                // Safely read stored total price from Supabase
+                let storedPrice = parseFloat(gown.price) || 0;
                 let images = Array.isArray(gown.images) ? gown.images : [];
 
                 let slidesHtml = images.map(imgUrl => `
@@ -793,8 +785,7 @@
                         </div>
                         <div class="card-body">
                             <p><strong>Size Availability:</strong> ${gown.desc || ''}</p>
-                            <div class="price-details">Original Price: ₫${vndValue.toLocaleString('en-US')} (+₱${markupVal} markup)</div>
-                            <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div class="price">₱${storedPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
                             <div class="admin-price-box">
                                 <label>Edit Size:</label>
@@ -805,13 +796,9 @@
                                         <option value="Small, Medium and Large" ${gown.desc === 'Small, Medium and Large' ? 'selected' : ''}>Small, Medium and Large</option>
                                     </select>
                                 </div>
-                                <label>Edit VND Price (₫):</label>
+                                <label>Edit Final PHP Price (₱):</label>
                                 <div class="admin-price-input-group">
-                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}">
-                                </div>
-                                <label>Edit Markup (₱):</label>
-                                <div class="admin-price-input-group">
-                                    <input type="number" id="markup-input-${itemId}" value="${markupVal}">
+                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(storedPrice)}" step="0.01">
                                 </div>
                                 <label>Replace Pictures (3+ required if changing):</label>
                                 <div class="admin-price-input-group">
@@ -839,12 +826,15 @@
             }
 
             wrapper.style.display = 'block';
-            list.innerHTML = stagedItems.map((item, index) => `
-                <div class="staged-item-row">
-                    <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | ₫${item.price.toLocaleString()} + ₱${item.markup} = <strong>₱${calculatePhpPrice(item.price, item.markup).toFixed(2)}</strong> [${item.images.length} photos]</span>
-                    <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
-                </div>
-            `).join('');
+            list.innerHTML = stagedItems.map((item, index) => {
+                let computedTotal = calculatePhpPrice(item.price, item.markup);
+                return `
+                    <div class="staged-item-row">
+                        <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | Total: <strong>₱${computedTotal.toFixed(2)}</strong> [${item.images.length} photos]</span>
+                        <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
+                    </div>
+                `;
+            }).join('');
         }
 
         window.removeStagedItem = function(index) {
@@ -862,11 +852,13 @@
 
             try {
                 for (const item of stagedItems) {
-                    // Send strictly using database columns: id, desc, price, images (omitting markup since your DB schema doesn't have a markup column, storing calculated total or keeping it clean)
+                    // Automatically pre-compute total PHP amount and push to exact database column schema
+                    const finalComputedPrice = calculatePhpPrice(item.price, item.markup);
+                    
                     const payload = {
                         id: item.id,
                         desc: item.desc,
-                        price: calculatePhpPrice(item.price, item.markup),
+                        price: finalComputedPrice,
                         images: item.images
                     };
 
@@ -935,12 +927,8 @@
         window.saveInlineItem = async function(id) {
             const descInput = document.getElementById(`desc-input-${id}`);
             const priceInput = document.getElementById(`vnd-input-${id}`);
-            const markupInput = document.getElementById(`markup-input-${id}`);
-            
             const desc = descInput ? descInput.value : '';
-            const priceVnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
-            const markupVal = markupInput ? parseFloat(markupInput.value) || 700 : 700;
-            const finalPhpPrice = calculatePhpPrice(priceVnd, markupVal);
+            const finalPhpPrice = priceInput ? parseFloat(priceInput.value) || 0 : 0;
             const fileInput = document.getElementById(`img-input-${id}`);
 
             let updatePayload = { desc, price: finalPhpPrice };
@@ -1006,6 +994,14 @@
             }
         });
 
-Publishing error: Could not find the 'markup' column of 'gowns_catalog' in the schema cache. Your Supabase table schema does not have a `markup` or `markup_peso` column. 
+        supabaseClient
+            .channel('public:gowns_catalog')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'gowns_catalog' }, () => {
+                fetchCatalog();
+            })
+            .subscribe();
 
-This updated code modifies the publishing and inline saving logic to automatically calculate the final sum (VND converted using the 2/800 ratio plus the ₱700 markup) and send it directly to your existing `price` database column, ensuring a successful publish without 400 errors.
+        fetchCatalog();
+    </script>
+</body>
+</html>
