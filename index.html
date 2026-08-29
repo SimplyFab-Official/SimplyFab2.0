@@ -86,10 +86,17 @@
             object-fit: contain;
         }
 
-        .messenger-bubble {
+        .floating-buttons-container {
             position: fixed;
             bottom: 25px;
             right: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .floating-action-btn {
             background-color: #0084FF;
             color: white;
             width: 60px;
@@ -100,13 +107,68 @@
             align-items: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             text-decoration: none;
-            font-size: 28px;
-            z-index: 1000;
+            font-size: 26px;
+            cursor: pointer;
+            border: none;
             transition: transform 0.2s;
+            position: relative;
         }
 
-        .messenger-bubble:hover {
+        .floating-action-btn:hover {
             transform: scale(1.08);
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #dc3545;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid white;
+        }
+
+        /* Wishlist / Checkout Modal Styles */
+        .cart-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2500;
+        }
+        .cart-modal-overlay.active {
+            display: flex;
+        }
+        .cart-modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: left;
+        }
+        .cart-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
         }
 
         nav {
@@ -325,6 +387,7 @@
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
 
         .carousel-track::-webkit-scrollbar {
@@ -339,16 +402,17 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #fdf6f6;
+            background: #fff;
+            position: relative;
         }
 
         .carousel-slide img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Perfectly fits the entire picture on mobile without zooming/clipping */
+            object-fit: contain;
             object-position: center;
             cursor: zoom-in;
-            background-color: #fdf6f6;
+            background: #fff;
         }
 
         .carousel-btn {
@@ -358,17 +422,18 @@
             background: rgba(0, 0, 0, 0.5);
             color: white;
             border: none;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             cursor: pointer;
             font-weight: bold;
             border-radius: 50%;
-            font-size: 18px;
+            font-size: 20px;
             z-index: 10;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .carousel-btn:hover {
@@ -407,7 +472,38 @@
             font-weight: bold;
             color: var(--primary);
             font-size: 18px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+        }
+
+        .user-action-row {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+            align-items: center;
+        }
+
+        .user-action-row select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .btn-add-checklist {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-add-checklist:hover {
+            background-color: #9e6f79;
         }
 
         .admin-price-box {
@@ -571,8 +667,39 @@
         </div>
     </div>
 
-    <!-- Messenger Floating Bubble -->
-    <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
+    <!-- User Checklist / Wishlist Modal -->
+    <div id="cart-modal" class="cart-modal-overlay">
+        <div class="cart-modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: var(--primary);">📋 My Purchase Checklist</h3>
+                <button onclick="toggleCartModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; font-weight: bold;">&times;</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">Review items you would like to buy. Copy your listing below to send directly to our Messenger chat!</p>
+            
+            <div id="cart-items-container" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto;">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div class="form-group">
+                <label>Generated Message for Seller (Copy & Paste):</label>
+                <textarea id="checkout-text-output" class="form-control" rows="5" readonly style="font-size: 12px; background: #fdf6f6;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button type="button" onclick="copyChecklistToClipboard()" style="flex: 1; background-color: #6c757d; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">📋 Copy Listing</button>
+                <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" style="flex: 1; text-align: center; background-color: #0084FF; color: white; text-decoration: none; padding: 10px; border-radius: 6px; font-weight: bold; display: flex; justify-content: center; align-items: center;">💬 Open Messenger</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Buttons -->
+    <div class="floating-buttons-container">
+        <button class="floating-action-btn" onclick="toggleCartModal()" title="View Purchase Checklist">
+            🛒
+            <span class="cart-badge" id="cart-badge-count">0</span>
+        </button>
+        <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!" style="position:static;">💬</a>
+    </div>
 
     <nav>
         <a href="#" class="nav-brand">
@@ -671,6 +798,8 @@
 
         let liveGownsCatalog = [];
         let stagedItems = JSON.parse(localStorage.getItem('simplyfab_staged_items')) || [];
+        let userChecklist = JSON.parse(localStorage.getItem('simplyfab_user_checklist')) || [];
+        let currentLoggedInUserName = "Guest";
 
         function calculatePhpPrice(vnd, markup) {
             const baseVnd = parseFloat(vnd) || 0;
@@ -701,6 +830,102 @@
             if (!track) return;
             const slideWidth = track.clientWidth;
             track.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
+        };
+
+        window.toggleCartModal = function() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('active');
+            if (modal.classList.contains('active')) {
+                renderChecklistModal();
+            }
+        };
+
+        window.addToChecklist = function(itemId) {
+            const sizeSelect = document.getElementById(`size-select-${itemId}`);
+            const selectedSize = sizeSelect ? sizeSelect.value : 'Standard';
+
+            const gown = liveGownsCatalog.find(g => (g.id || g.name) === itemId);
+            if (!gown) return;
+
+            let vndValue = parseFloat(gown.price_vnd) || 0;
+            let markupVal = gown.default_markup !== undefined && gown.default_markup !== null ? parseFloat(gown.default_markup) : 700;
+            let phpPrice = calculatePhpPrice(vndValue, markupVal);
+
+            // Check if item with same size already exists
+            const existingIndex = userChecklist.findIndex(item => item.id === itemId && item.size === selectedSize);
+            if (existingIndex > -1) {
+                userChecklist[existingIndex].qty += 1;
+            } else {
+                userChecklist.push({
+                    id: itemId,
+                    size: selectedSize,
+                    price: phpPrice,
+                    qty: 1
+                });
+            }
+
+            localStorage.setItem('simplyfab_user_checklist', JSON.stringify(userChecklist));
+            updateCartBadge();
+            alert(`✨ Added item ${itemId} (Size: ${selectedSize}) to your Purchase Checklist!`);
+        };
+
+        window.removeFromChecklist = function(index) {
+            userChecklist.splice(index, 1);
+            localStorage.setItem('simplyfab_user_checklist', JSON.stringify(userChecklist));
+            updateCartBadge();
+            renderChecklistModal();
+        };
+
+        function updateCartBadge() {
+            const badge = document.getElementById('cart-badge-count');
+            const totalQty = userChecklist.reduce((sum, item) => sum + item.qty, 0);
+            if (badge) badge.textContent = totalQty;
+        }
+
+        function renderChecklistModal() {
+            const container = document.getElementById('cart-items-container');
+            const outputText = document.getElementById('checkout-text-output');
+
+            if (userChecklist.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: #777; font-size: 13px;">Your checklist is empty. Add items from the catalogue!</p>`;
+                outputText.value = "";
+                return;
+            }
+
+            container.innerHTML = userChecklist.map((item, index) => `
+                <div class="cart-item-row">
+                    <span><strong>${item.id}</strong> | Size: ${item.size} | ₱${item.price.toLocaleString('en-US', {minimumFractionDigits: 2})} (x${item.qty})</span>
+                    <button onclick="removeFromChecklist(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
+                </div>
+            `).join('');
+
+            // Generate message template for direct copy-paste to seller
+            let totalSum = userChecklist.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            let messageLines = [];
+            messageLines.push(`Hello SimplyFab! I would like to order the following items:`);
+            messageLines.push(`Customer Name: ${currentLoggedInUserName}`);
+            messageLines.push(`-----------------------------------`);
+            userChecklist.forEach(item => {
+                messageLines.push(`• Code: ${item.id} | Size: ${item.size} | Qty: ${item.qty} | ₱${(item.price * item.qty).toLocaleString('en-US', {minimumFractionDigits: 2})}`);
+            });
+            messageLines.push(`-----------------------------------`);
+            messageLines.push(`Total Estimated Price: ₱${totalSum.toLocaleString('en-US', {minimumFractionDigits: 2})}`);
+            messageLines.push(`Please let me know how to proceed with payment and shipping. Thank you!`);
+
+            outputText.value = messageLines.join('\n');
+        }
+
+        window.copyChecklistToClipboard = function() {
+            const outputText = document.getElementById('checkout-text-output');
+            if (!outputText.value) {
+                alert("Checklist is empty!");
+                return;
+            }
+            navigator.clipboard.writeText(outputText.value).then(() => {
+                alert("📋 Checklist listing copied to clipboard! You can now paste it directly into our Messenger chat.");
+            }).catch(err => {
+                alert("Failed to copy text: " + err);
+            });
         };
 
         async function generateNextItemCode() {
@@ -747,6 +972,7 @@
             }
             renderCatalog(liveGownsCatalog);
             generateNextItemCode();
+            updateCartBadge();
         }
 
         function filterCatalog() {
@@ -818,7 +1044,18 @@
                             <div class="price-details">Original Price: ₫${vndValue.toLocaleString('en-US')} (+₱${markupVal} markup)</div>
                             <div class="price" id="preview-price-${itemId}">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
-                            <div class="admin-price-box">
+                            <!-- User Size Dropdown & Checklist Add Button -->
+                            <div class="user-action-row">
+                                <select id="size-select-${itemId}">
+                                    <option value="Small">Small</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Small and Medium">Small and Medium</option>
+                                    <option value="Small, Medium and Large">Small, Medium and Large</option>
+                                </select>
+                                <button type="button" class="btn-add-checklist" onclick="addToChecklist('${itemId}')">+ Checklist</button>
+                            </div>
+
+                            <div class="admin-price-box" style="margin-top: 15px;">
                                 <label>Edit Size:</label>
                                 <div class="admin-price-input-group">
                                     <select id="desc-input-${itemId}">
@@ -1102,6 +1339,7 @@
             const username = usernameInput.value.trim();
             const password = passwordInput.value.trim();
 
+            currentLoggedInUserName = username;
             loginModal.style.display = 'none';
 
             if (username === ADMIN_NAME && password === ADMIN_CODE) {
