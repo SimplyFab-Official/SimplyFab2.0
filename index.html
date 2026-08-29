@@ -767,12 +767,10 @@
 </head>
 <body id="body-root">
 
-    <!-- Image Lightbox Modal Viewer -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="Enlarged Dress Design">
     </div>
 
-    <!-- Login Modal Pop-up on Visit -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
@@ -791,7 +789,6 @@
         </div>
     </div>
 
-    <!-- Floating Facebook Messenger Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">
         💬
     </a>
@@ -821,7 +818,6 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
-        <!-- Launch Progress Metrics Tracker Panel -->
         <div id="admin-panel-metrics" class="admin-panel">
             <h3>🚀 App Launch Progress: Registration Tracker</h3>
             <p style="font-size: 13px; color: #666; margin-top:0;">Track user registration growth as you prepare for the official launch.</p>
@@ -867,7 +863,6 @@
             </form>
         </div>
 
-        <!-- Admin Duplicate Clean-up Panel -->
         <div id="admin-panel-duplicates" class="admin-panel" style="border-left-color: #d9534f;">
             <h3>🧹 Admin Panel: Duplicate & Clean-up Filter</h3>
             <p style="font-size: 13px; color: #666; margin-top:0;">Scan and instantly purge corrupted, accidental duplicate items, or orphaned records.</p>
@@ -940,7 +935,6 @@
                 Total Estimated Amount: ₱<span id="cart-total-display">0.00</span>
             </div>
 
-            <!-- Itemized Summary Box -->
             <div class="checkout-summary-box">
                 <h4>📦 Liked Items Summary</h4>
                 <div id="checkout-itemized-list">
@@ -1054,7 +1048,10 @@
         let liveGownsCatalog = (() => {
             const localFallback = localStorage.getItem('sf_local_catalog_backup');
             if (localFallback) {
-                try { return JSON.parse(localFallback); } catch (e) { return defaultGowns; }
+                try { 
+                    const parsed = JSON.parse(localFallback);
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                } catch (e) { /* fallback */ }
             }
             return defaultGowns;
         })();
@@ -1144,7 +1141,7 @@
                     const gownRef = doc(db, "gowns_catalog", String(id));
                     await setDoc(gownRef, { likes }, { merge: true });
                 } catch (e) {
-                    console.warn("Firestore offline warning on like:", e);
+                    console.warn("Firestore sync warning on like:", e);
                 }
             }
         };
@@ -1182,7 +1179,7 @@
                     const gownRef = doc(db, "gowns_catalog", String(id));
                     await setDoc(gownRef, { comments }, { merge: true });
                 } catch (e) {
-                    console.warn("Firestore offline warning on comment:", e);
+                    console.warn("Firestore sync warning on comment:", e);
                 }
             }
         };
@@ -1203,7 +1200,7 @@
                     const gownRef = doc(db, "gowns_catalog", String(gownId));
                     await setDoc(gownRef, { comments }, { merge: true });
                 } catch (e) {
-                    console.warn("Firestore offline warning on delete comment:", e);
+                    console.warn("Firestore sync warning on delete comment:", e);
                 }
             }
         };
@@ -1340,7 +1337,7 @@
         }
 
         window.scanAndPurgeDuplicates = async function() {
-            if (!confirm("Admin: Run aggressive duplicate and corruption scan? This will clean local/remote records and remove broken or unnamed items.")) return;
+            if (!confirm("Admin: Run aggressive duplicate and corruption scan?")) return;
             
             let uniqueMap = new Map();
             let purgedCount = 0;
@@ -1375,7 +1372,7 @@
                 }
             }
 
-            alert(`Aggressive scan complete! Purged ${purgedCount} duplicate/corrupt items.`);
+            alert(`Scan complete! Purged ${purgedCount} duplicate/corrupt items.`);
         };
 
         const purgeDuplicatesBtn = document.getElementById('purge-duplicates-btn');
@@ -1517,7 +1514,6 @@
                             <p>${gown.desc || ''}</p>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
-                            <!-- Admin Edit Box (VND Price + Auto +₱700 Markup) -->
                             <div class="admin-price-box">
                                 <label for="name-input-${itemId}">Edit Dress Name:</label>
                                 <div class="admin-price-input-group">
@@ -1753,14 +1749,22 @@
 
                 event.target.reset();
                 previewPhpConversion();
-                alert(`Dress number ${customId} successfully published or filled in!`);
+                
+                // Auto-scroll directly down to the catalog grid view
+                const catalogSection = document.getElementById('catalog');
+                if (catalogSection) {
+                    catalogSection.scrollIntoView({ behavior: 'smooth' });
+                }
 
+                alert(`Dress number ${customId} successfully published and synced to Firebase!`);
+
+                // Instantly save to Firebase Firestore so visitors get it in real-time
                 if (db && isFirestoreHealthy) {
                     try {
                         const gownRef = doc(db, "gowns_catalog", customId);
                         await setDoc(gownRef, newGown, { merge: true });
                     } catch (e) {
-                        console.warn("Cloud sync queued in offline mode: ", e);
+                        console.warn("Cloud sync error: ", e);
                     }
                 }
             }
@@ -1811,7 +1815,7 @@
             persistLocalCatalog();
             renderCatalog();
 
-            alert(`Item ${id} successfully updated!`);
+            alert(`Item ${id} updated and synced to Firebase!`);
 
             if (db && isFirestoreHealthy) {
                 try {
@@ -1826,7 +1830,7 @@
                         comments: gown.comments || []
                     }, { merge: true });
                 } catch (e) {
-                    console.warn("Cloud sync update fallback active:", e);
+                    console.warn("Cloud sync update error:", e);
                 }
             }
         };
@@ -1896,29 +1900,30 @@
 
         window.deleteGown = async function(id) {
             if (confirm(`Are you sure you want to permanently delete item ${id}? This will remove it from Firebase and local cache.`)) {
-                // Aggressively remove from local array & backup state immediately
                 liveGownsCatalog = liveGownsCatalog.filter(g => String(g.id) !== String(id));
                 persistLocalCatalog();
                 renderCatalog();
                 alert(`Dress ${id} removed successfully!`);
 
-                // Aggressively execute remote deletion from Firebase Firestore
                 if (db && isFirestoreHealthy) {
                     try {
                         await deleteDoc(doc(db, "gowns_catalog", String(id)));
                     } catch (e) {
-                        console.warn("Cloud delete warning or permission block: ", e);
+                        console.warn("Cloud delete warning: ", e);
                     }
                 }
             }
         };
 
         async function initRealtimeCatalog() {
+            // Paint instantly from local storage
+            renderCatalog();
+
             if (!db || !isFirestoreHealthy) {
-                renderCatalog();
                 return;
             }
 
+            // Sync default items to cloud if missing
             for (const defaultGown of defaultGowns) {
                 try {
                     const ref = doc(db, "gowns_catalog", defaultGown.id);
@@ -1928,6 +1933,7 @@
                 }
             }
 
+            // Real-time listener: visitors and users automatically receive all updates instantly
             onSnapshot(collection(db, "gowns_catalog"), (snapshot) => {
                 let remoteGownsMap = new Map();
                 snapshot.forEach((docSnap) => {
@@ -1943,7 +1949,6 @@
                     }
                 });
                 
-                // Merge with local state while respecting permanent deletions (prevent deleted items from being resurrected by stale backups)
                 if (remoteGownsMap.size > 0) {
                     let combined = [];
                     remoteGownsMap.forEach(val => combined.push(val));
@@ -1952,7 +1957,7 @@
                     renderCatalog();
                 }
             }, (error) => {
-                console.warn("Firestore snapshot offline/blocked mode active. Using robust local cache.", error);
+                console.warn("Firestore snapshot offline mode active.", error);
                 isFirestoreHealthy = false;
                 renderCatalog();
             });
@@ -1960,7 +1965,6 @@
 
         checkVisitorSession();
         initRealtimeCatalog();
-        renderCatalog();
         renderCart();
         loadContactInfo();
     </script>
