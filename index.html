@@ -551,7 +551,7 @@
         <img id="lightbox-img" src="" alt="">
     </div>
 
-    <!-- Visitor Login Modal (Admin code hidden from view) -->
+    <!-- Visitor Login Modal (Admin code completely hidden) -->
     <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -565,7 +565,7 @@
                     <label for="admin-pass-input">Phone Number:</label>
                     <input type="text" id="admin-pass-input" class="form-control" placeholder="e.g. 09123456789" required>
                 </div>
-                <button type="submit" class="btn-submit" style="background-color: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">View Catalogue</button>
+                <button type="submit" class="btn-submit" style="background-color: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%;">View Catalogue</button>
             </form>
         </div>
     </div>
@@ -974,7 +974,7 @@
                     .eq('id', id);
 
                 if (error) {
-                    alert("Error updating item: " + error.message);
+                    alert("Error updating item: " + error.image || error.message);
                 } else {
                     alert("Item updated and synced successfully!");
                     fetchCatalog();
