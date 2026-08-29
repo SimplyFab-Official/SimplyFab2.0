@@ -970,7 +970,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('gowns_catalog')
-                    .select('*');
+                    .select('id, name, "desc", colors, price_vnd, default_markup, images');
             
                 if (error) {
                     console.error("Supabase fetch error:", error.message);
@@ -1170,7 +1170,7 @@
 
                     const { error } = await supabaseClient
                         .from('gowns_catalog')
-                        .upsert(payload);
+                        .upsert(payload, { onConflict: 'id' });
 
                     if (error) {
                         throw new Error(error.message);
