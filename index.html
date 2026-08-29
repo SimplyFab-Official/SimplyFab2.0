@@ -322,11 +322,6 @@
             flex-grow: 1;
         }
 
-        .card-body h3 {
-            margin: 0 0 8px 0;
-            font-size: 18px;
-        }
-
         .card-body p {
             color: var(--text-light);
             font-size: 14px;
@@ -534,11 +529,10 @@
                         <label for="new-custom-id">Item ID Number:</label>
                         <input type="text" id="new-custom-id" class="form-control" placeholder="ITEM-0001" required>
                     </div>
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label for="new-name">Dress Name:</label>
-                        <input type="text" id="new-name" class="form-control" placeholder="Dress Label" required>
+                    <div class="form-group" style="margin-bottom:0; display:none;">
+                        <input type="hidden" id="new-name" value="Dress">
                     </div>
-                    <div class="form-group" style="margin-bottom:0;">
+                    <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
                         <label for="new-desc">Description:</label>
                         <input type="text" id="new-desc" class="form-control" placeholder="Short description" required>
                     </div>
@@ -581,7 +575,7 @@
         const defaultGowns = [
             {
                 id: "ITEM-0001",
-                name: "The Aria Ballgown",
+                name: "Dress",
                 desc: "Elegant princess-cut ballgown with crystal embellishments.",
                 price_vnd: 720000,
                 images: [
@@ -592,7 +586,7 @@
             },
             {
                 id: "ITEM-0002",
-                name: "Velvet Evening Silhouette",
+                name: "Dress",
                 desc: "Sleek, form-fitting evening dress designed for gala events.",
                 price_vnd: 600000,
                 images: [
@@ -603,7 +597,7 @@
             },
             {
                 id: "ITEM-0003",
-                name: "Royal Lace Modern Terno",
+                name: "Dress",
                 desc: "Traditional yet modern filipiniana aesthetic for formal occasions.",
                 price_vnd: 920000,
                 images: [
@@ -670,7 +664,7 @@
                 let userPhpPrice = calculatePhpPrice(vndValue);
                 let images = gown.images || [];
 
-                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom">`).join('');
+                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${itemId}" onclick="openLightbox('${imgUrl}')" title="Click to zoom">`).join('');
 
                 return `
                     <div class="card" id="card-${itemId}">
@@ -682,15 +676,10 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <h3>${gown.name}</h3>
                             <p>${gown.desc || ''}</p>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
                             <div class="admin-price-box">
-                                <label>Edit Name:</label>
-                                <div class="admin-price-input-group">
-                                    <input type="text" id="name-input-${itemId}" value="${gown.name}">
-                                </div>
                                 <label>Edit VND Price (₫):</label>
                                 <div class="admin-price-input-group">
                                     <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}">
@@ -718,7 +707,7 @@
         document.getElementById('add-gown-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('new-custom-id').value.trim().toUpperCase();
-            const name = document.getElementById('new-name').value;
+            const name = "Dress";
             const desc = document.getElementById('new-desc').value;
             const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
             const fileInput = document.getElementById('new-imgs');
@@ -753,12 +742,11 @@
         });
 
         window.saveInlineItem = async function(id) {
-            const name = document.getElementById(`name-input-${id}`).value;
             const price_vnd = parseFloat(document.getElementById(`vnd-input-${id}`).value);
 
             const { error } = await supabaseClient
                 .from('gowns_catalog')
-                .update({ name, price_vnd })
+                .update({ price_vnd })
                 .eq('id', id);
 
             if (error) {
