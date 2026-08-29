@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
-    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -643,12 +642,10 @@
 </head>
 <body id="body-root">
 
-    <!-- Lightbox Modal -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="">
     </div>
 
-    <!-- Visitor Login Modal (Admin code hidden completely) -->
     <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -667,18 +664,16 @@
         </div>
     </div>
 
-    <!-- User Checklist / Wishlist Modal -->
     <div id="cart-modal" class="cart-modal-overlay">
         <div class="cart-modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0; color: var(--primary);">📋 My Purchase Checklist</h3>
                 <button onclick="toggleCartModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; font-weight: bold;">&times;</button>
             </div>
-            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">Review items you would like to buy. Copy your listing below to send directly to our Messenger chat!</p>
+            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">Review items you would like to buy with their total amount. Copy your listing below to send directly to our Messenger chat!</p>
             
             <div id="cart-items-container" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto;">
-                <!-- Populated dynamically -->
-            </div>
+                </div>
 
             <div class="form-group">
                 <label>Generated Message for Seller (Copy & Paste):</label>
@@ -692,7 +687,6 @@
         </div>
     </div>
 
-    <!-- Floating Action Buttons -->
     <div class="floating-buttons-container">
         <button class="floating-action-btn" onclick="toggleCartModal()" title="View Purchase Checklist">
             🛒
@@ -723,12 +717,10 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
-        <!-- Search Bar for Users and Admin -->
         <div class="search-bar-container">
             <input type="text" id="search-input" placeholder="🔍 Search Item Code (e.g. SF0001)..." oninput="filterCatalog()">
         </div>
 
-        <!-- Admin Panel for Staging Items & Publishing -->
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>Add New Dress Item</h3>
             <form id="add-gown-form">
@@ -774,7 +766,6 @@
             </div>
         </div>
 
-        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -851,7 +842,6 @@
             let markupVal = gown.default_markup !== undefined && gown.default_markup !== null ? parseFloat(gown.default_markup) : 700;
             let phpPrice = calculatePhpPrice(vndValue, markupVal);
 
-            // Check if item with same size already exists
             const existingIndex = userChecklist.findIndex(item => item.id === itemId && item.size === selectedSize);
             if (existingIndex > -1) {
                 userChecklist[existingIndex].qty += 1;
@@ -894,12 +884,11 @@
 
             container.innerHTML = userChecklist.map((item, index) => `
                 <div class="cart-item-row">
-                    <span><strong>${item.id}</strong> | Size: ${item.size} | ₱${item.price.toLocaleString('en-US', {minimumFractionDigits: 2})} (x${item.qty})</span>
+                    <span><strong>${item.id}</strong> | Size: ${item.size} | ₱${(item.price * item.qty).toLocaleString('en-US', {minimumFractionDigits: 2})} (x${item.qty})</span>
                     <button onclick="removeFromChecklist(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
                 </div>
             `).join('');
 
-            // Generate message template for direct copy-paste to seller
             let totalSum = userChecklist.reduce((sum, item) => sum + (item.price * item.qty), 0);
             let messageLines = [];
             messageLines.push(`Hello SimplyFab! I would like to order the following items:`);
@@ -909,7 +898,7 @@
                 messageLines.push(`• Code: ${item.id} | Size: ${item.size} | Qty: ${item.qty} | ₱${(item.price * item.qty).toLocaleString('en-US', {minimumFractionDigits: 2})}`);
             });
             messageLines.push(`-----------------------------------`);
-            messageLines.push(`Total Estimated Price: ₱${totalSum.toLocaleString('en-US', {minimumFractionDigits: 2})}`);
+            messageLines.push(`Total Amount: ₱${totalSum.toLocaleString('en-US', {minimumFractionDigits: 2})}`);
             messageLines.push(`Please let me know how to proceed with payment and shipping. Thank you!`);
 
             outputText.value = messageLines.join('\n');
@@ -1044,7 +1033,6 @@
                             <div class="price-details">Original Price: ₫${vndValue.toLocaleString('en-US')} (+₱${markupVal} markup)</div>
                             <div class="price" id="preview-price-${itemId}">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
-                            <!-- User Size Dropdown & Checklist Add Button -->
                             <div class="user-action-row">
                                 <select id="size-select-${itemId}">
                                     <option value="Small">Small</option>
