@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
-    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -32,7 +31,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.6);
-            display: flex;
+            display: none; /* Hidden by default */
             justify-content: center;
             align-items: center;
             z-index: 2000;
@@ -167,7 +166,7 @@
             font-weight: 600;
             cursor: pointer;
             color: #555;
-            display: none;
+            display: inline-block; /* Visible directly in the header navbar */
         }
 
         .admin-toggle-btn:hover {
@@ -238,7 +237,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
             margin-bottom: 30px;
             border-left: 5px solid var(--primary);
-            display: none;
+            display: none; /* Hidden until password is entered */
         }
 
         .admin-panel.active {
@@ -514,42 +513,40 @@
 </head>
 <body id="body-root">
 
-    <!-- Lightbox Modal (Hidden by default) -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="">
     </div>
 
-    <!-- Login Modal for Visitor & Admin -->
-    <div id="login-modal" class="modal-overlay">
+    <div id="admin-login-modal" class="modal-overlay">
         <div class="modal-card">
-            <h2>✨ SimplyFab Dress Catalogue</h2>
-            <p>Please enter your Name and Phone Number to continue.</p>
-            <form id="visitor-login-form">
+            <h2>🔒 Admin Console Login</h2>
+            <p>Enter admin credentials to unlock management tools.</p>
+            <form id="admin-auth-form">
                 <div class="form-group">
-                    <label for="visitor-name">Your Name:</label>
-                    <input type="text" id="visitor-name" class="form-control" placeholder="e.g. Maria or SimplyFab" required>
+                    <label for="admin-user-input">Admin Username:</label>
+                    <input type="text" id="admin-user-input" class="form-control" placeholder="SimplyFab" required>
                 </div>
                 <div class="form-group">
-                    <label for="visitor-phone">Phone Number / Admin Code:</label>
-                    <input type="text" id="visitor-phone" class="form-control" placeholder="e.g. 09123456789 or 021910" required>
+                    <label for="admin-pass-input">Admin Password / Code:</label>
+                    <input type="password" id="admin-pass-input" class="form-control" placeholder="021910" required>
                 </div>
-                <button type="submit" class="btn-submit" style="background-color: var(--primary);">Enter Catalogue</button>
+                <button type="submit" class="btn-submit" style="background-color: var(--primary);">Login</button>
+                <button type="button" class="btn-submit" style="background-color: #ccc; color: #333; margin-top: 8px;" onclick="closeAdminLoginModal()">Cancel</button>
             </form>
         </div>
     </div>
 
-    <!-- Messenger Floating Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
 
     <nav>
         <a href="#" class="nav-brand">
             ✨ SimplyFab Dress Catalogue
-            <span class="nav-welcome-tag" id="nav-welcome-message">Welcome, Guest!</span>
+            <span class="nav-welcome-tag" id="nav-welcome-message">Welcome, Valued Guest!</span>
         </a>
         <ul class="nav-links">
             <li><a href="#home">Home</a></li>
             <li><a href="#catalog">Dress Collection</a></li>
-            <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" type="button" onclick="toggleAdminPanel()">🔒 Admin Console</button></li>
+            <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" type="button" onclick="promptAdminLogin()">🔒 Admin Console</button></li>
         </ul>
     </nav>
 
@@ -564,7 +561,6 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
-        <!-- Admin Panel for Adding Items & Syncing -->
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>⚙️ Admin Console & Data Migration</h3>
             <button type="button" class="btn-sync" onclick="migrateLocalToSupabase()">🔄 Push Default Catalog Items to Supabase Now</button>
@@ -597,7 +593,6 @@
             </form>
         </div>
 
-        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -673,9 +668,12 @@
             document.getElementById('image-lightbox').classList.remove('active');
         };
 
-        window.toggleAdminPanel = function() {
-            const panel = document.getElementById('admin-panel-catalog');
-            if (panel) panel.classList.toggle('active');
+        window.promptAdminLogin = function() {
+            document.getElementById('admin-login-modal').style.display = 'flex';
+        };
+
+        window.closeAdminLoginModal = function() {
+            document.getElementById('admin-login-modal').style.display = 'none';
         };
 
         window.scrollCarousel = function(itemId, direction) {
@@ -733,7 +731,7 @@
 
                 return `
                     <div class="card" id="card-${itemId}">
-                        <div class="item-badge">${itemId} (${images.length} photos)</div>
+                        <div class="item-badge">${itemId}</div>
                         <button class="btn-delete-item" onclick="deleteGown('${itemId}')" title="Delete item">×</button>
                         <div class="carousel-container">
                             <div class="carousel-track" id="track-${itemId}">
@@ -868,22 +866,21 @@
             }
         };
 
-        document.getElementById('visitor-login-form').addEventListener('submit', (e) => {
+        // Admin Auth Form Handler
+        document.getElementById('admin-auth-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const name = document.getElementById('visitor-name').value.trim();
-            const phone = document.getElementById('visitor-phone').value.trim();
+            const username = document.getElementById('admin-user-input').value.trim();
+            const password = document.getElementById('admin-pass-input').value.trim();
 
-            if (name.toLowerCase() === ADMIN_NAME.toLowerCase() && phone === ADMIN_CODE) {
+            if (username === ADMIN_NAME && password === ADMIN_CODE) {
                 document.getElementById('admin-panel-catalog').classList.add('active');
                 document.getElementById('body-root').classList.add('admin-mode');
-                document.getElementById('admin-toggle-btn-ui').style.display = 'inline-block';
-                alert("Welcome Admin! Admin Console unlocked.");
+                document.getElementById('admin-login-modal').style.display = 'none';
+                document.getElementById('nav-welcome-message').textContent = `Welcome, Admin (${ADMIN_NAME})!`;
+                alert("Admin Console unlocked successfully!");
             } else {
-                alert(`Welcome, ${name}! Enjoy browsing the catalog.`);
+                alert("Invalid username or password code!");
             }
-
-            document.getElementById('login-modal').style.display = 'none';
-            document.getElementById('nav-welcome-message').textContent = `Welcome, ${name}!`;
         });
 
         supabaseClient
