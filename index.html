@@ -551,7 +551,7 @@
         <img id="lightbox-img" src="" alt="">
     </div>
 
-    <!-- Visitor Login Modal (Admin code completely hidden) -->
+    <!-- Visitor Login Modal (Admin code hidden completely) -->
     <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -946,6 +946,7 @@
             }
         });
 
+        // FIXED: Excluded primary key 'id' from update payload to prevent 400 error on update requests
         window.saveInlineItem = async function(id) {
             const descInput = document.getElementById(`desc-input-${id}`);
             const priceInput = document.getElementById(`vnd-input-${id}`);
@@ -974,7 +975,7 @@
                     .eq('id', id);
 
                 if (error) {
-                    alert("Error updating item: " + error.image || error.message);
+                    alert("Error updating item: " + error.message);
                 } else {
                     alert("Item updated and synced successfully!");
                     fetchCatalog();
