@@ -612,7 +612,8 @@
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-price-vnd">Price VND (₫):</label>
-                        <input type="number" id="new-price-vnd" class="form-control" placeholder="720000" step="1" required>
+                        <input type="number" id="new-price-vnd" class="form-control" placeholder="720000" step="1" required oninput="previewPhpCalculation()">
+                        <small style="color: var(--primary); font-size: 11px; font-weight: bold; display: block; margin-top: 4px;" id="calc-preview">PHP Total: ₱0.00</small>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-imgs">Pictures (3+):</label>
@@ -658,6 +659,13 @@
             const baseVnd = parseFloat(vnd) || 0;
             return (baseVnd * VND_TO_PHP_RATIO) + ADMIN_MARKUP;
         }
+
+        window.previewPhpCalculation = function() {
+            const inputVal = document.getElementById('new-price-vnd').value;
+            const previewEl = document.getElementById('calc-preview');
+            const calculated = calculatePhpPrice(inputVal);
+            previewEl.textContent = `PHP Total (Calculated + ₱700): ₱${calculated.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        };
 
         window.openLightbox = function(imgSrc) {
             if (!imgSrc) return;
@@ -875,6 +883,7 @@
 
                 alert(`Item ${id} added to staged list below! Click 'Publish to Catalog' when you are ready.`);
                 e.target.reset();
+                document.getElementById('calc-preview').textContent = "PHP Total: ₱0.00";
                 renderStagedList();
                 generateNextItemCode();
             } catch (err) {
@@ -914,7 +923,7 @@
                     fetchCatalog();
                 }
             } catch (err) {
-                alert("Error processing replacement images: " + err.message);
+                alert("Error processing replacement images: " + err.number);
             }
         };
 
