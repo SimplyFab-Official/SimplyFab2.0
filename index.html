@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
+    <!-- Supabase CDN Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --primary: #b5838d;
@@ -249,83 +251,11 @@
             font-size: 18px;
         }
 
-        .launch-metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .metric-card {
-            background: #fdf6f6;
-            border: 1px solid var(--accent);
-            padding: 18px;
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        .metric-card h4 {
-            margin: 0 0 8px 0;
-            font-size: 13px;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .metric-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--primary);
-            margin: 0;
-        }
-
         .admin-form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 120px;
             gap: 15px;
             align-items: flex-end;
-        }
-
-        .admin-contact-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) 120px;
-            gap: 15px;
-            align-items: flex-end;
-        }
-
-        .tracker-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 13px;
-        }
-
-        .tracker-table th, .tracker-table td {
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-
-        .tracker-table th {
-            background-color: #f5e6e8;
-            color: #333;
-        }
-
-        .btn-export {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            display: inline-block;
-        }
-
-        .btn-export:hover {
-            background-color: #9d6b76;
         }
 
         .catalog-grid {
@@ -362,42 +292,6 @@
             z-index: 10;
         }
 
-        .like-container {
-            position: absolute;
-            top: 10px;
-            right: 48px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 2px 8px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 10;
-        }
-
-        .btn-heart {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-        }
-
-        .btn-heart:hover {
-            transform: scale(1.2);
-        }
-
-        .like-count {
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--text-dark);
-        }
-
         .carousel-container {
             position: relative;
             width: 100%;
@@ -419,28 +313,6 @@
             object-fit: cover;
             flex-shrink: 0;
             cursor: zoom-in;
-        }
-
-        .carousel-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0,0,0,0.4);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 3px;
-            font-size: 14px;
-            z-index: 5;
-        }
-
-        .carousel-btn.prev { left: 8px; }
-        .carousel-btn.next { right: 8px; }
-
-        .carousel-btn:hover {
-            background: rgba(0,0,0,0.7);
         }
 
         .card-body {
@@ -465,88 +337,8 @@
         .price {
             font-weight: bold;
             color: var(--primary);
-            font-size: 16px;
+            font-size: 18px;
             margin-bottom: 15px;
-        }
-
-        .comments-section {
-            background-color: #fdf6f6;
-            border-top: 1px solid var(--accent);
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
-        }
-
-        .comments-list {
-            max-height: 120px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            font-size: 12px;
-        }
-
-        .comment-item {
-            background: white;
-            padding: 6px 10px;
-            border-radius: 4px;
-            margin-bottom: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 6px;
-        }
-
-        .comment-author {
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .btn-delete-comment {
-            background: none;
-            border: none;
-            color: #cc0000;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 12px;
-            display: none;
-        }
-
-        .admin-mode .btn-delete-comment {
-            display: inline-block;
-        }
-
-        .comment-input-group {
-            display: flex;
-            gap: 6px;
-        }
-
-        .comment-input {
-            flex: 1;
-            padding: 6px 8px;
-            border: 1px solid var(--accent);
-            border-radius: 4px;
-            font-size: 12px;
-            outline: none;
-        }
-
-        .comment-input:focus {
-            border-color: var(--primary);
-        }
-
-        .btn-comment {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .btn-comment:hover {
-            background-color: #9d6b76;
         }
 
         .admin-price-box {
@@ -597,27 +389,6 @@
             width: 100%;
         }
 
-        .btn-save-inline-price:hover {
-            background-color: #9d6b76;
-        }
-
-        .btn-cart {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 10px;
-        }
-
-        .btn-cart:hover {
-            background-color: #9d6b76;
-        }
-
         .btn-delete-item {
             position: absolute;
             top: 10px;
@@ -641,67 +412,6 @@
             display: flex;
         }
 
-        .cart-section {
-            background: var(--white);
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .cart-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .cart-table th, .cart-table td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-            font-size: 14px;
-        }
-
-        .cart-table th {
-            background-color: #fdf6f6;
-        }
-
-        .checkout-summary-box {
-            background-color: #fdf6f6;
-            border: 1px solid var(--accent);
-            padding: 15px 20px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-
-        .checkout-summary-box h4 {
-            margin: 0 0 10px 0;
-            color: var(--primary);
-            font-size: 16px;
-            border-bottom: 1px dashed var(--accent);
-            padding-bottom: 6px;
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            margin-bottom: 6px;
-            color: var(--text-dark);
-        }
-
-        .summary-total {
-            display: flex;
-            justify-content: space-between;
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--primary);
-            border-top: 1px solid var(--accent);
-            padding-top: 8px;
-            margin-top: 8px;
-        }
-
         .form-group {
             margin-bottom: 15px;
         }
@@ -723,10 +433,6 @@
             outline: none;
         }
 
-        .form-control:focus {
-            border-color: var(--primary);
-        }
-
         .btn-submit {
             background-color: #0084FF;
             color: white;
@@ -738,12 +444,6 @@
             cursor: pointer;
             width: 100%;
             margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(0,132,255,0.3);
-            transition: background 0.2s;
-        }
-
-        .btn-submit:hover {
-            background-color: #006dd9;
         }
 
         footer {
@@ -754,44 +454,32 @@
             margin-top: 60px;
             font-size: 13px;
         }
-
-        footer p {
-            margin: 5px 0;
-        }
-
-        @media(max-width: 768px) {
-            .hero h1 { font-size: 32px; }
-            .nav-links { display: none; }
-        }
     </style>
 </head>
 <body id="body-root">
 
+    <!-- Lightbox Modal -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="Enlarged Dress Design">
     </div>
 
+    <!-- Simple Login Modal -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
-            <h2>✨ Welcome to SimplyFab Dress Catalogue</h2>
-            <p>Please enter your Name and Phone Number to continue.</p>
+            <h2>✨ SimplyFab Dress Catalogue</h2>
+            <p>Enter your name to view the catalog prices.</p>
             <form id="visitor-login-form">
                 <div class="form-group" style="text-align: left;">
-                    <label for="visitor-name">Your Name:</label>
-                    <input type="text" id="visitor-name" class="form-control" placeholder="e.g., Maria Santos or SimplyFab" required>
+                    <label for="visitor-name">Your Name / Admin Code:</label>
+                    <input type="text" id="visitor-name" class="form-control" placeholder="e.g. Maria or SimplyFab" required>
                 </div>
-                <div class="form-group" style="text-align: left;">
-                    <label for="visitor-phone">Phone Number / Admin Code:</label>
-                    <input type="text" id="visitor-phone" class="form-control" placeholder="Enter phone number or admin code" required>
-                </div>
-                <button type="submit" class="btn-submit" style="background-color: var(--primary);">Enter Catalogue</button>
+                <button type="submit" class="btn-submit" style="background-color: var(--primary);">View Catalog</button>
             </form>
         </div>
     </div>
 
-    <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">
-        💬
-    </a>
+    <!-- Messenger Floating Bubble -->
+    <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
 
     <nav>
         <a href="#" class="nav-brand">
@@ -801,15 +489,13 @@
         <ul class="nav-links">
             <li><a href="#home">Home</a></li>
             <li><a href="#catalog">Dress Collection</a></li>
-            <li><a href="#cart-checkout">My Liked Items</a></li>
-            <li><a href="#contact">Contact</a></li>
             <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" type="button">🔒 Admin Console</button></li>
         </ul>
     </nav>
 
     <section id="home" class="hero">
         <h1>Look Stunning. Feel Beautiful.</h1>
-        <p>Explore our exclusive dress collection, like items, leave comments, and send selections directly to our page!</p>
+        <p>Explore our exclusive dress collection and view prices instantly.</p>
         <a href="#catalog" class="btn-primary" style="background: white; color: var(--primary);">Explore Collection</a>
     </section>
 
@@ -818,28 +504,14 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
-        <div id="admin-panel-metrics" class="admin-panel">
-            <h3>🚀 App Launch Progress: Registration Tracker</h3>
-            <p style="font-size: 13px; color: #666; margin-top:0;">Track user registration growth as you prepare for the official launch.</p>
-            <div class="launch-metrics-grid">
-                <div class="metric-card">
-                    <h4>Total Registered Users</h4>
-                    <p class="metric-value" id="metric-total-users">0</p>
-                </div>
-                <div class="metric-card">
-                    <h4>Published Dresses in Catalog</h4>
-                    <p class="metric-value" id="metric-total-dresses">0</p>
-                </div>
-            </div>
-        </div>
-
+        <!-- Admin Panel for Adding Items -->
         <div id="admin-panel-catalog" class="admin-panel">
-            <h3>⚙️ Admin Panel: Add or Fill Missing Item Number (e.g. ITEM-0002)</h3>
+            <h3>⚙️ Admin Panel: Add New Dress Item</h3>
             <form id="add-gown-form">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-custom-id">Item ID Number:</label>
-                        <input type="text" id="new-custom-id" class="form-control" placeholder="e.g. ITEM-0002" required>
+                        <input type="text" id="new-custom-id" class="form-control" placeholder="ITEM-0001" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-name">Dress Name:</label>
@@ -851,7 +523,7 @@
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-price-vnd">Price VND (₫):</label>
-                        <input type="number" id="new-price-vnd" class="form-control" placeholder="800000" step="1" required>
+                        <input type="number" id="new-price-vnd" class="form-control" placeholder="720000" step="1" required>
                         <small style="color: var(--primary); font-size: 10px; font-weight: bold;" id="vnd-conversion-preview">₱0.00 PHP</small>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
@@ -863,1088 +535,208 @@
             </form>
         </div>
 
-        <div id="admin-panel-duplicates" class="admin-panel" style="border-left-color: #d9534f;">
-            <h3>🧹 Admin Panel: Duplicate & Clean-up Filter</h3>
-            <p style="font-size: 13px; color: #666; margin-top:0;">Scan and instantly purge corrupted, accidental duplicate items, or orphaned records.</p>
-            <button type="button" id="purge-duplicates-btn" class="btn-export" style="background-color: #d9534f;">🔍 Scan & Clean Duplicates Now</button>
-        </div>
-
-        <div id="admin-panel-users" class="admin-panel">
-            <h3>👥 Admin Panel: Registered Visitors List</h3>
-            <p style="font-size: 13px; color: #666; margin-top:0;">View all visitors who registered upon visiting the website.</p>
-            <div style="overflow-x: auto;">
-                <table class="tracker-table">
-                    <thead>
-                        <tr>
-                            <th>Registration Date</th>
-                            <th>Name</th>
-                            <th>Phone Number</th>
-                        </tr>
-                    </thead>
-                    <tbody id="registered-users-table-body">
-                    </tbody>
-                </table>
-            </div>
-            <button type="button" id="export-users-btn" class="btn-export">📥 Export Users to CSV</button>
-        </div>
-
-        <div id="admin-panel-contact" class="admin-panel">
-            <h3>⚙️ Admin Panel: Update Contact & Business Details</h3>
-            <form id="update-contact-form">
-                <div class="admin-contact-grid">
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label for="admin-web">Website Address/URL:</label>
-                        <input type="text" id="admin-web" class="form-control" required>
-                    </div>
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label for="admin-email">Email Address:</label>
-                        <input type="email" id="admin-email" class="form-control" required>
-                    </div>
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label for="admin-phone">Phone Number:</label>
-                        <input type="text" id="admin-phone" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn-submit" style="margin-top:0; height: 40px; background-color: var(--primary);">Save Details</button>
-                </div>
-            </form>
-        </div>
-
+        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
+            <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
     </div>
 
-    <div id="cart-checkout" class="container">
-        <h2 class="section-title" style="text-align:center;">My Liked Items</h2>
-        <div class="cart-section">
-            <table class="cart-table">
-                <thead>
-                    <tr>
-                        <th>Item #</th>
-                        <th>Dress Label / Name</th>
-                        <th style="width: 80px;">Qty</th>
-                        <th style="width: 120px;">Price (PHP)</th>
-                        <th style="width: 40px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="cart-items-body">
-                    <tr><td colspan="5" style="text-align: center; color: #777;">No liked items yet. Browse and click "Add to Liked Items" on any dress!</td></tr>
-                </tbody>
-            </table>
-            
-            <div style="text-align: right; font-size: 16px; font-weight: bold; margin-bottom: 25px;">
-                Total Estimated Amount: ₱<span id="cart-total-display">0.00</span>
-            </div>
-
-            <div class="checkout-summary-box">
-                <h4>📦 Liked Items Summary</h4>
-                <div id="checkout-itemized-list">
-                    <span style="color: #777; font-size: 13px;">No items selected yet.</span>
-                </div>
-                <div class="summary-total">
-                    <span>Total Amount:</span>
-                    <span>₱<span id="summary-total-amount">0.00</span></span>
-                </div>
-            </div>
-
-            <form id="send-messenger-form">
-                <h3 style="color: var(--primary); border-bottom: 1px solid var(--accent); padding-bottom: 8px; margin-bottom: 15px;">Your Contact Information</h3>
-                <div class="form-group">
-                    <label for="client-name">Your Name:</label>
-                    <input type="text" id="client-name" class="form-control" placeholder="Your Full Name" required>
-                </div>
-                <div class="form-group">
-                    <label for="client-phone">Contact Number:</label>
-                    <input type="text" id="client-phone" class="form-control" placeholder="+63 9XX XXX XXXX" required>
-                </div>
-
-                <button type="submit" class="btn-submit">💬 Send Liked Items via Messenger</button>
-            </form>
-        </div>
-    </div>
-
-    <footer id="contact">
+    <footer>
         <p><strong>SimplyFab Dress Catalogue</strong></p>
-        <p>Website: <span id="footer-web">SimplyFab.com</span> | Email: <span id="footer-email">tin23_angela@gmail.com</span> | Phone: <span id="footer-phone">09954836767</span></p>
+        <p>Email: tin23_angela@gmail.com | Phone: 09954836767</p>
         <p style="margin-top: 15px; font-size: 11px; color: #aaa;">&copy; 2026 SimplyFab Dress Catalogue. All rights reserved.</p>
     </footer>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, setDoc, onSnapshot, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <script>
+        // Updated with your Supabase Project URL and Anon API Key
+        const SUPABASE_URL = "https://bxqdecdhfjhnuqmstmra.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4cWRlY2RoZmpobnVxbXN0bXJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjQ4OTcxODAsImV4cCI6MjA0MDQ3MzE4MH0.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ey";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA5JeXosMT6e5xYcDTJNdPKPjKF5tRcf5Y",
-            authDomain: "simplyfab2-0.firebaseapp.com",
-            projectId: "simplyfab2-0",
-            storageBucket: "simplyfab2-0.firebasestorage.app",
-            messagingSenderId: "793548467748",
-            appId: "1:793548467748:web:aa219020e01e7f77e332b1",
-            measurementId: "G-9SW6XLGR6P"
-        };
-
-        let db = null;
-        let isFirestoreHealthy = true;
-
-        try {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-        } catch (err) {
-            console.warn("Firebase init failed:", err);
-            isFirestoreHealthy = false;
-        }
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const VND_TO_PHP_RATIO = 2 / 800;
         const ADMIN_MARKUP = 700;
         const ADMIN_NAME = "SimplyFab";
-        const ADMIN_PHONE = "021910";
-        const COMPANY_EMAIL = "tin23_angela@gmail.com";
 
-        const defaultGowns = [
-            {
-                id: "ITEM-0001",
-                name: "The Aria Ballgown",
-                desc: "Elegant princess-cut ballgown with crystal embellishments.",
-                priceVnd: 720000,
-                images: [
-                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
-                ],
-                video: "",
-                likes: [],
-                comments: []
-            },
-            {
-                id: "ITEM-0002",
-                name: "Velvet Evening Silhouette",
-                desc: "Sleek, form-fitting evening dress designed for gala events.",
-                priceVnd: 600000,
-                images: [
-                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80"
-                ],
-                video: "",
-                likes: [],
-                comments: []
-            },
-            {
-                id: "ITEM-0003",
-                name: "Royal Lace Modern Terno",
-                desc: "Traditional yet modern filipiniana aesthetic for formal occasions.",
-                priceVnd: 920000,
-                images: [
-                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
-                ],
-                video: "",
-                likes: [],
-                comments: []
-            }
-        ];
-
-        let cart = [];
-        let liveGownsCatalog = (() => {
-            const localFallback = localStorage.getItem('sf_local_catalog_backup');
-            if (localFallback) {
-                try { 
-                    const parsed = JSON.parse(localFallback);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-                } catch (e) { /* fallback */ }
-            }
-            return defaultGowns;
-        })();
-
-        function persistLocalCatalog() {
-            try {
-                localStorage.setItem('sf_local_catalog_backup', JSON.stringify(liveGownsCatalog));
-            } catch (e) {
-                console.warn("Local storage error.");
-            }
-        }
+        let liveGownsCatalog = [];
 
         function calculatePhpPrice(vnd) {
             const baseVnd = parseFloat(vnd) || 0;
             return (baseVnd * VND_TO_PHP_RATIO) + ADMIN_MARKUP;
         }
 
-        function getNormalizedVnd(gown) {
-            if (gown.priceVnd !== undefined && gown.priceVnd !== null && !isNaN(gown.priceVnd)) {
-                return parseFloat(gown.priceVnd);
-            }
-            if (gown.price !== undefined && gown.price !== null && !isNaN(gown.price)) {
-                const rawPhp = parseFloat(gown.price);
-                return Math.max(0, (rawPhp - ADMIN_MARKUP) / VND_TO_PHP_RATIO);
-            }
-            return 500000;
-        }
-
-        function getRegisteredUsers() {
-            const saved = localStorage.getItem('sf_registered_users');
-            return saved ? JSON.parse(saved) : [];
-        }
-
-        function updateLaunchMetrics() {
-            const usersCount = getRegisteredUsers().length;
-            const currentGowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
-            const dressesCount = currentGowns.length;
-            
-            const metricUsersEl = document.getElementById('metric-total-users');
-            const metricDressesEl = document.getElementById('metric-total-dresses');
-            
-            if (metricUsersEl) metricUsersEl.textContent = usersCount;
-            if (metricDressesEl) metricDressesEl.textContent = dressesCount;
-        }
-
         window.openLightbox = function(imgSrc) {
-            const lightbox = document.getElementById('image-lightbox');
-            const lightboxImg = document.getElementById('lightbox-img');
-            if (lightbox && lightboxImg) {
-                lightboxImg.src = imgSrc;
-                lightbox.classList.add('active');
-            }
+            document.getElementById('lightbox-img').src = imgSrc;
+            document.getElementById('image-lightbox').classList.add('active');
         };
 
         window.closeLightbox = function() {
-            const lightbox = document.getElementById('image-lightbox');
-            if (lightbox) lightbox.classList.remove('active');
+            document.getElementById('image-lightbox').classList.remove('active');
         };
 
-        window.toggleLikeItem = async function(id) {
-            const user = JSON.parse(localStorage.getItem('sf_logged_user'));
-            if (!user) {
-                alert("Please log in first to like items.");
-                return;
-            }
-
-            const gown = liveGownsCatalog.find(g => String(g.id) === String(id));
-            if (!gown) return;
-
-            let likes = gown.likes || [];
-            const userIndex = likes.indexOf(user.phone);
-
-            if (userIndex > -1) {
-                likes.splice(userIndex, 1);
-            } else {
-                likes.push(user.phone);
-            }
-
-            gown.likes = likes;
-            persistLocalCatalog();
-            renderCatalog();
-
-            if (db && isFirestoreHealthy) {
-                try {
-                    const gownRef = doc(db, "gowns_catalog", String(id));
-                    await setDoc(gownRef, { likes }, { merge: true });
-                } catch (e) {
-                    console.warn("Firestore sync warning on like:", e);
-                }
-            }
-        };
-
-        window.addComment = async function(event, id) {
-            event.preventDefault();
-            const user = JSON.parse(localStorage.getItem('sf_logged_user'));
-            if (!user) {
-                alert("Please log in first to leave comments.");
-                return;
-            }
-
-            const inputField = document.getElementById(`comment-input-${id}`);
-            const commentText = inputField.value.trim();
-            if (!commentText) return;
-
-            const gown = liveGownsCatalog.find(g => String(g.id) === String(id));
-            if (!gown) return;
-
-            let comments = gown.comments || [];
-            comments.push({ 
-                id: Date.now(),
-                author: user.name, 
-                text: commentText, 
-                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) 
-            });
-
-            gown.comments = comments;
-            inputField.value = "";
-            persistLocalCatalog();
-            renderCatalog();
-
-            if (db && isFirestoreHealthy) {
-                try {
-                    const gownRef = doc(db, "gowns_catalog", String(id));
-                    await setDoc(gownRef, { comments }, { merge: true });
-                } catch (e) {
-                    console.warn("Firestore sync warning on comment:", e);
-                }
-            }
-        };
-
-        window.deleteComment = async function(gownId, commentTimestamp) {
-            if (!confirm("Admin: Are you sure you want to delete this comment?")) return;
-
-            const gown = liveGownsCatalog.find(g => String(g.id) === String(gownId));
-            if (!gown) return;
-
-            let comments = (gown.comments || []).filter(c => c.id !== commentTimestamp);
-            gown.comments = comments;
-            persistLocalCatalog();
-            renderCatalog();
-
-            if (db && isFirestoreHealthy) {
-                try {
-                    const gownRef = doc(db, "gowns_catalog", String(gownId));
-                    await setDoc(gownRef, { comments }, { merge: true });
-                } catch (e) {
-                    console.warn("Firestore sync warning on delete comment:", e);
-                }
-            }
-        };
-
-        function previewPhpConversion() {
-            const vndInput = parseFloat(document.getElementById('new-price-vnd').value) || 0;
-            const phpValue = calculatePhpPrice(vndInput);
-            const previewEl = document.getElementById('vnd-conversion-preview');
-            if (previewEl) {
-                previewEl.textContent = `₱${phpValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} PHP`;
-            }
-        }
-
-        const newPriceVndInput = document.getElementById('new-price-vnd');
-        if (newPriceVndInput) {
-            newPriceVndInput.addEventListener('input', previewPhpConversion);
-        }
-
-        function handleVisitorLogin(event) {
-            event.preventDefault();
-            const nameInput = document.getElementById('visitor-name');
-            const phoneInput = document.getElementById('visitor-phone');
-            if (!nameInput || !phoneInput) return;
-
-            const name = nameInput.value.trim();
-            const phone = phoneInput.value.trim();
+        // Fetch catalog items from Supabase database
+        async function fetchCatalog() {
+            const { data, error } = await supabaseClient
+                .from('gowns_catalog')
+                .select('*')
+                .order('id', { ascending: true });
             
-            if (name && phone) {
-                if (name.toLowerCase() === ADMIN_NAME.toLowerCase() && phone === ADMIN_PHONE) {
-                    localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone, isAdmin: true }));
-                    const modal = document.getElementById('login-modal');
-                    if (modal) modal.style.display = 'none';
-                    activateAdminMode();
-                    updateWelcomeBanner(name, true);
-                    alert("Welcome Admin! Successfully recognized and redirected to the admin console.");
-                    window.location.hash = "#catalog";
-                    return;
-                }
+            if (error) {
+                console.error("Error fetching Supabase data:", error);
+                return;
+            }
 
-                const dateRegistered = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                localStorage.setItem('sf_logged_user', JSON.stringify({ name, phone, isAdmin: false }));
-                
-                let users = getRegisteredUsers();
-                if (!users.some(u => u.phone === phone)) {
-                    users.unshift({ dateRegistered, name, phone });
-                    localStorage.setItem('sf_registered_users', JSON.stringify(users));
-                }
-
-                const modal = document.getElementById('login-modal');
-                if (modal) modal.style.display = 'none';
-                
-                const clientName = document.getElementById('client-name');
-                const clientPhone = document.getElementById('client-phone');
-                if (clientName) clientName.value = name;
-                if (clientPhone) clientPhone.value = phone;
-                
-                updateWelcomeBanner(name, false);
+            if (data) {
+                liveGownsCatalog = data;
                 renderCatalog();
-                updateLaunchMetrics();
             }
-        }
-
-        const visitorLoginForm = document.getElementById('visitor-login-form');
-        if (visitorLoginForm) {
-            visitorLoginForm.addEventListener('submit', handleVisitorLogin);
-        }
-
-        function updateWelcomeBanner(name, isAdmin) {
-            const welcomeEl = document.getElementById('nav-welcome-message');
-            if (welcomeEl) {
-                welcomeEl.textContent = isAdmin ? `✨ Welcome back, Admin ${name}!` : `✨ Welcome, ${name}!`;
-            }
-        }
-
-        function checkVisitorSession() {
-            const user = localStorage.getItem('sf_logged_user');
-            const modal = document.getElementById('login-modal');
-            if (user) {
-                if (modal) modal.style.display = 'none';
-                const parsed = JSON.parse(user);
-                updateWelcomeBanner(parsed.name, parsed.isAdmin);
-                
-                if (parsed.isAdmin) {
-                    activateAdminMode();
-                } else {
-                    const clientName = document.getElementById('client-name');
-                    const clientPhone = document.getElementById('client-phone');
-                    if (clientName) clientName.value = parsed.name;
-                    if (clientPhone) clientPhone.value = parsed.phone;
-                }
-            } else {
-                if (modal) modal.style.display = 'flex';
-            }
-        }
-
-        function activateAdminMode() {
-            const panels = ['admin-panel-metrics', 'admin-panel-catalog', 'admin-panel-duplicates', 'admin-panel-users', 'admin-panel-contact'];
-            panels.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.classList.add('active');
-            });
-            const root = document.getElementById('body-root');
-            if (root) root.classList.add('admin-mode');
-            const toggleBtn = document.getElementById('admin-toggle-btn-ui');
-            if (toggleBtn) toggleBtn.style.display = 'inline-block';
-            renderRegisteredUsers();
-            updateLaunchMetrics();
-        }
-
-        window.toggleAdminPanel = function() {
-            const panels = ['admin-panel-metrics', 'admin-panel-catalog', 'admin-panel-duplicates', 'admin-panel-users', 'admin-panel-contact'];
-            const firstPanel = document.getElementById('admin-panel-catalog');
-            const isActive = firstPanel ? firstPanel.classList.contains('active') : false;
-            
-            panels.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    if (isActive) el.classList.remove('active');
-                    else el.classList.add('active');
-                }
-            });
-            if (!isActive) {
-                renderRegisteredUsers();
-                updateLaunchMetrics();
-            }
-        };
-
-        const adminToggleBtnUi = document.getElementById('admin-toggle-btn-ui');
-        if (adminToggleBtnUi) {
-            adminToggleBtnUi.addEventListener('click', window.toggleAdminPanel);
-        }
-
-        window.scanAndPurgeDuplicates = async function() {
-            if (!confirm("Admin: Run duplicate cleanup scan?")) return;
-            
-            let uniqueMap = new Map();
-            let purgedCount = 0;
-
-            liveGownsCatalog.forEach(g => {
-                if (g && g.id && g.name && g.name !== "undefined" && !uniqueMap.has(g.id)) {
-                    uniqueMap.set(g.id, g);
-                } else {
-                    purgedCount++;
-                }
-            });
-            liveGownsCatalog = Array.from(uniqueMap.values());
-            persistLocalCatalog();
-            renderCatalog();
-
-            if (db && isFirestoreHealthy) {
-                try {
-                    const querySnapshot = await getDocs(collection(db, "gowns_catalog"));
-                    let remoteSeenIds = new Set();
-                    for (const documentSnapshot of querySnapshot.docs) {
-                        const docId = documentSnapshot.id;
-                        const data = documentSnapshot.data();
-                        if (!data || !data.name || data.name === "undefined" || remoteSeenIds.has(docId)) {
-                            await deleteDoc(doc(db, "gowns_catalog", docId));
-                            purgedCount++;
-                        } else {
-                            remoteSeenIds.add(docId);
-                        }
-                    }
-                } catch (err) {
-                    console.warn("Purge warning:", err);
-                }
-            }
-            alert(`Cleaned up ${purgedCount} items.`);
-        };
-
-        const purgeDuplicatesBtn = document.getElementById('purge-duplicates-btn');
-        if (purgeDuplicatesBtn) {
-            purgeDuplicatesBtn.addEventListener('click', window.scanAndPurgeDuplicates);
-        }
-
-        function renderRegisteredUsers() {
-            const tbody = document.getElementById('registered-users-table-body');
-            if (!tbody) return;
-            const users = getRegisteredUsers();
-
-            if (users.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #777;">No registered visitors yet.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = users.map(user => `
-                <tr>
-                    <td>${user.dateRegistered}</td>
-                    <td><strong>${user.name}</strong></td>
-                    <td>${user.phone}</td>
-                </tr>
-            `).join('');
-        }
-
-        window.exportRegisteredUsersCSV = function() {
-            const users = getRegisteredUsers();
-            if (users.length === 0) {
-                alert("No registered users to export.");
-                return;
-            }
-
-            let csvContent = "data:text/csv;charset=utf-8,Registration Date,Name,Phone Number\r\n";
-            users.forEach(user => {
-                csvContent += `"${user.dateRegistered}","${user.name}","${user.phone}"\r\n`;
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "registered_users_simply_fab.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
-
-        const exportUsersBtn = document.getElementById('export-users-btn');
-        if (exportUsersBtn) {
-            exportUsersBtn.addEventListener('click', window.exportRegisteredUsersCSV);
         }
 
         function renderCatalog() {
             const grid = document.getElementById('catalog-grid');
             if (!grid) return;
-            
-            let gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
-            
-            let uniqueMap = new Map();
-            gowns.forEach(g => {
-                if (g && g.id && g.name && g.name !== "undefined") {
-                    uniqueMap.set(g.id, g);
-                }
-            });
-            gowns = Array.from(uniqueMap.values());
 
-            gowns.sort((a, b) => {
-                const idA = String(a.id || "").toUpperCase();
-                const idB = String(b.id || "").toUpperCase();
-                return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
-            });
-
-            const currentUser = JSON.parse(localStorage.getItem('sf_logged_user'));
-
-            if (gowns.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog.</p>`;
-                updateLaunchMetrics();
+            if (liveGownsCatalog.length === 0) {
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog yet.</p>`;
                 return;
             }
 
-            grid.innerHTML = gowns.map((gown) => {
+            grid.innerHTML = liveGownsCatalog.map((gown) => {
                 const itemId = gown.id;
-                const likes = gown.likes || [];
-                const isLiked = currentUser ? likes.includes(currentUser.phone) : false;
-                const comments = gown.comments || [];
-
-                let vndValue = getNormalizedVnd(gown);
+                let vndValue = parseFloat(gown.price_vnd) || 0;
                 let userPhpPrice = calculatePhpPrice(vndValue);
+                let images = gown.images || [];
 
-                let images = gown.images;
-                if (!images || !Array.isArray(images) || images.length === 0 || (images.length === 1 && !images[0])) {
-                    images = [
-                        "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
-                        "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
-                        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
-                    ];
-                }
-
-                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom design" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80';">`).join('');
-                if (gown.video) {
-                    mediaHtml += `<video src="${gown.video}" controls muted></video>`;
-                }
-
-                const totalSlides = images.length + (gown.video ? 1 : 0);
-                const carouselControls = totalSlides > 1 ? `
-                    <button class="carousel-btn prev" onclick="slideMedia('${itemId}', -1)">&#10094;</button>
-                    <button class="carousel-btn next" onclick="slideMedia('${itemId}', 1)">&#10095;</button>
-                ` : '';
-
-                const commentsHtml = comments.length > 0 ? comments.map(c => `
-                    <div class="comment-item">
-                        <div>
-                            <span class="comment-author">${c.author}:</span> ${c.text}
-                            <div style="font-size: 10px; color: #999;">${c.date}</div>
-                        </div>
-                        <button class="btn-delete-comment" onclick="deleteComment('${itemId}', ${c.id || 0})" title="Delete comment">×</button>
-                    </div>
-                `).join('') : `<div style="color: #888; font-size: 11px; text-align: center; padding: 4px;">No comments yet. Be the first!</div>`;
+                let mediaHtml = images.map((imgUrl) => `<img src="${imgUrl}" alt="${gown.name}" onclick="openLightbox('${imgUrl}')" title="Click to zoom">`).join('');
 
                 return `
                     <div class="card" id="card-${itemId}">
                         <div class="item-badge">${itemId}</div>
-                        <div class="like-container">
-                            <button class="btn-heart" onclick="toggleLikeItem('${itemId}')" title="Like item">
-                                ${isLiked ? '❤️' : '🤍'}
-                            </button>
-                            <span class="like-count">${likes.length}</span>
-                        </div>
                         <button class="btn-delete-item" onclick="deleteGown('${itemId}')" title="Delete item">×</button>
-                        <div class="carousel-container" data-index="0" data-total="${totalSlides}">
+                        <div class="carousel-container" data-index="0" data-total="${images.length}">
                             <div class="carousel-track" id="track-${itemId}">
                                 ${mediaHtml}
                             </div>
-                            ${carouselControls}
                         </div>
                         <div class="card-body">
                             <h3>${gown.name}</h3>
                             <p>${gown.desc || ''}</p>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
+                            <!-- Inline Admin Edit Box -->
                             <div class="admin-price-box">
-                                <label for="name-input-${itemId}">Edit Dress Name:</label>
+                                <label>Edit Name:</label>
                                 <div class="admin-price-input-group">
                                     <input type="text" id="name-input-${itemId}" value="${gown.name}">
                                 </div>
-                                <label for="vnd-input-${itemId}">Edit Price in VND (₫):</label>
+                                <label>Edit VND Price (₫):</label>
                                 <div class="admin-price-input-group">
-                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}" step="1">
+                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}">
                                 </div>
                                 <button class="btn-save-inline-price" onclick="saveInlineItem('${itemId}')">Save Changes</button>
                             </div>
-
-                            <button class="btn-cart" onclick="addToCart('${itemId}')">Add to Liked Items 🛍️</button>
-                        </div>
-
-                        <div class="comments-section">
-                            <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 6px;">💬 Customer Comments (${comments.length})</div>
-                            <div class="comments-list">
-                                ${commentsHtml}
-                            </div>
-                            <form onsubmit="addComment(event, '${itemId}')" class="comment-input-group" style="margin-top: 8px;">
-                                <label for="comment-input-${itemId}" style="display:none;">Leave a comment</label>
-                                <input type="text" id="comment-input-${itemId}" class="comment-input" placeholder="Leave a comment..." required>
-                                <button type="submit" class="btn-comment">Post</button>
-                            </form>
                         </div>
                     </div>
                 `;
             }).join('');
-            updateLaunchMetrics();
         }
 
-        window.slideMedia = function(gownId, direction) {
-            const card = document.getElementById(`card-${gownId}`);
-            if (!card) return;
-            const container = card.querySelector('.carousel-container');
-            const track = document.getElementById(`track-${gownId}`);
-            let currentIndex = parseInt(container.getAttribute('data-index'));
-            let totalSlides = parseInt(container.getAttribute('data-total'));
-
-            track.querySelectorAll('video').forEach(v => v.pause());
-
-            currentIndex = (currentIndex + direction + totalSlides) % totalSlides;
-            container.setAttribute('data-index', currentIndex);
-            
-            track.style.transform = `translateX(-${currentIndex * 100}%)`;
-        };
-
-        window.addToCart = function(id) {
-            const gowns = liveGownsCatalog.length > 0 ? liveGownsCatalog : defaultGowns;
-            const gown = gowns.find(g => String(g.id) === String(id));
-            if (!gown) return;
-
-            let vnd = getNormalizedVnd(gown);
-            let phpFinal = calculatePhpPrice(vnd);
-
-            const existing = cart.find(item => String(item.id) === String(id));
-
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                cart.push({ ...gown, priceVnd: vnd, qty: 1 });
-            }
-
-            renderCart();
-            alert(`"${gown.name}" (${gown.id}) has been added to your liked items!`);
-        };
-
-        window.updateCartQty = function(id, delta) {
-            const item = cart.find(i => String(i.id) === String(id));
-            if (item) {
-                item.qty += delta;
-                if (item.qty <= 0) {
-                    cart = cart.filter(i => String(i.id) !== String(id));
-                }
-            }
-            renderCart();
-        };
-
-        window.removeFromCart = function(id) {
-            cart = cart.filter(i => String(i.id) !== String(id));
-            renderCart();
-        };
-
-        function renderCart() {
-            const tbody = document.getElementById('cart-items-body');
-            const totalDisplay = document.getElementById('cart-total-display');
-            const itemizedListEl = document.getElementById('checkout-itemized-list');
-            const summaryTotalEl = document.getElementById('summary-total-amount');
-
-            if (!tbody || !totalDisplay) return;
-
-            if (cart.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">No liked items yet. Browse and click "Add to Liked Items" on any dress!</td></tr>`;
-                totalDisplay.textContent = "0.00";
-                if (itemizedListEl) itemizedListEl.innerHTML = `<span style="color: #777; font-size: 13px;">No items selected yet.</span>`;
-                if (summaryTotalEl) summaryTotalEl.textContent = "0.00";
-                return;
-            }
-
-            let total = 0;
-            tbody.innerHTML = cart.map(item => {
-                let vnd = getNormalizedVnd(item);
-                let unitPhp = calculatePhpPrice(vnd);
-                const itemTotal = unitPhp * item.qty;
-                total += itemTotal;
-
-                return `
-                    <tr>
-                        <td><strong>${item.id}</strong></td>
-                        <td>${item.name}</td>
-                        <td>
-                            <button type="button" onclick="updateCartQty('${item.id}', -1)" style="padding: 2px 6px;">-</button>
-                            <span style="margin: 0 6px;">${item.qty}</span>
-                            <button type="button" onclick="updateCartQty('${item.id}', 1)" style="padding: 2px 6px;">+</button>
-                        </td>
-                        <td>₱${itemTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                        <td><button type="button" class="btn-action" onclick="removeFromCart('${item.id}')" style="color: #a00; border:none; background:none; font-weight:bold; cursor:pointer;">×</button></td>
-                    </tr>
-                `;
-            }).join('');
-
-            totalDisplay.textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2});
-
-            if (itemizedListEl && summaryTotalEl) {
-                itemizedListEl.innerHTML = cart.map(item => {
-                    let vnd = getNormalizedVnd(item);
-                    let sub = calculatePhpPrice(vnd) * item.qty;
-                    return `
-                        <div class="summary-row">
-                            <span>[${item.id}] ${item.name} (Qty: ${item.qty})</span>
-                            <span>₱${sub.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                        </div>
-                    `;
-                }).join('');
-                summaryTotalEl.textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2});
-            }
-        }
-
-        function loadContactInfo() {
-            const contactInfo = JSON.parse(localStorage.getItem('sf_contact_info')) || {
-                web: "SimplyFab.com",
-                email: COMPANY_EMAIL,
-                phone: "09954836767"
-            };
-
-            if (document.getElementById('footer-web')) document.getElementById('footer-web').textContent = contactInfo.web;
-            if (document.getElementById('footer-email')) document.getElementById('footer-email').textContent = contactInfo.email;
-            if (document.getElementById('footer-phone')) document.getElementById('footer-phone').textContent = contactInfo.phone;
-
-            if (document.getElementById('admin-web')) document.getElementById('admin-web').value = contactInfo.web;
-            if (document.getElementById('admin-email')) document.getElementById('admin-email').value = contactInfo.email;
-            if (document.getElementById('admin-phone')) document.getElementById('admin-phone').value = contactInfo.phone;
-        }
-
-        function resizeImage(file, maxWidth, maxHeight, quality, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > maxWidth) {
-                            height *= maxWidth / width;
-                            width = maxWidth;
-                        }
-                    } else {
-                        if (height > maxHeight) {
-                            width *= maxHeight / height;
-                            height = maxHeight;
-                        }
-                    }
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    callback(canvas.toDataURL('image/jpeg', quality));
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function handleAddNewGown(event) {
-            event.preventDefault();
-            const idInput = document.getElementById('new-custom-id');
-            const nameInput = document.getElementById('new-name');
-            const descInput = document.getElementById('new-desc');
-            const priceInput = document.getElementById('new-price-vnd');
-            if (!idInput || !nameInput || !descInput || !priceInput) return;
-
-            let customId = idInput.value.trim().toUpperCase();
-            if (!customId.startsWith("ITEM-")) {
-                customId = "ITEM-" + customId.replace(/[^0-9]/g, "").padStart(4, '0');
-            }
-
-            const name = nameInput.value;
-            const desc = descInput.value;
-            const priceVnd = parseFloat(priceInput.value) || 0;
-            
+        // Add new gown handler with auto-scroll to catalog
+        document.getElementById('add-gown-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('new-custom-id').value.trim().toUpperCase();
+            const name = document.getElementById('new-name').value;
+            const desc = document.getElementById('new-desc').value;
+            const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
             const fileInput = document.getElementById('new-imgs');
-            const files = Array.from(fileInput.files);
-            if (files.length < 3) {
-                alert("Please select at least 3 pictures for the product.");
+            
+            if (fileInput.files.length < 3) {
+                alert("Please select at least 3 pictures.");
                 return;
             }
 
-            let loadedImages = [];
-            let processedImages = 0;
-
-            async function finalizeGown() {
-                const newGown = {
-                    id: customId,
-                    name,
-                    desc,
-                    priceVnd,
-                    images: loadedImages,
-                    video: "",
-                    likes: [],
-                    comments: [],
-                    createdAt: Date.now()
-                };
-
-                liveGownsCatalog = liveGownsCatalog.filter(g => String(g.id) !== customId);
-                liveGownsCatalog.push(newGown);
-
-                persistLocalCatalog();
-                renderCatalog();
-
-                event.target.reset();
-                previewPhpConversion();
-                
-                // Auto-scroll directly down to the catalog grid view
-                const catalogSection = document.getElementById('catalog');
-                if (catalogSection) {
-                    catalogSection.scrollIntoView({ behavior: 'smooth' });
-                }
-
-                alert(`Dress number ${customId} successfully published and synced to Firebase!`);
-
-                if (db && isFirestoreHealthy) {
-                    try {
-                        const gownRef = doc(db, "gowns_catalog", customId);
-                        await setDoc(gownRef, newGown, { merge: true });
-                    } catch (e) {
-                        console.error("Firebase write permission error:", e);
-                        alert("Error: Could not save to Firebase. Check your Firestore Security Rules.");
-                    }
-                }
+            let images = [];
+            for (let file of Array.from(fileInput.files)) {
+                const reader = await new Promise(resolve => {
+                    const r = new FileReader();
+                    r.onload = e => resolve(e.target.result);
+                    r.readAsDataURL(file);
+                });
+                images.push(reader);
             }
 
-            files.forEach((file, index) => {
-                resizeImage(file, 400, 400, 0.4, function(compressedDataUrl) {
-                    loadedImages[index] = compressedDataUrl;
-                    processedImages++;
-                    if (processedImages === files.length) {
-                        finalizeGown();
-                    }
-                });
-            });
-        }
+            const { error } = await supabaseClient
+                .from('gowns_catalog')
+                .upsert({ id, name, desc, price_vnd, images });
 
-        const addGownForm = document.getElementById('add-gown-form');
-        if (addGownForm) {
-            addGownForm.addEventListener('submit', handleAddNewGown);
-        }
+            if (error) {
+                alert("Error saving item: " + error.message);
+            } else {
+                alert(`Item ${id} saved successfully!`);
+                e.target.reset();
+                document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });
+                fetchCatalog();
+            }
+        });
 
+        // Save inline edit
         window.saveInlineItem = async function(id) {
-            const nameInput = document.getElementById(`name-input-${id}`);
-            const vndInput = document.getElementById(`vnd-input-${id}`);
-            if (!nameInput || !vndInput) return;
+            const name = document.getElementById(`name-input-${id}`).value;
+            const price_vnd = parseFloat(document.getElementById(`vnd-input-${id}`).value);
 
-            const newName = nameInput.value.trim();
-            const newVnd = parseFloat(vndInput.value);
+            const { error } = await supabaseClient
+                .from('gowns_catalog')
+                .update({ name, price_vnd })
+                .eq('id', id);
 
-            if (!newName || isNaN(newVnd) || newVnd < 0) {
-                alert("Please enter a valid name and VND price.");
-                return;
-            }
-
-            const gown = liveGownsCatalog.find(g => String(g.id) === String(id));
-            if (!gown) return;
-
-            gown.name = newName;
-            gown.priceVnd = newVnd;
-
-            if (!gown.images || !Array.isArray(gown.images) || gown.images.length === 0) {
-                gown.images = [
-                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
-                ];
-            }
-
-            persistLocalCatalog();
-            renderCatalog();
-
-            alert(`Item ${id} updated and synced to Firebase!`);
-
-            if (db && isFirestoreHealthy) {
-                try {
-                    const gownRef = doc(db, "gowns_catalog", String(id));
-                    await setDoc(gownRef, {
-                        name: newName,
-                        priceVnd: newVnd,
-                        desc: gown.desc || "",
-                        images: gown.images,
-                        video: gown.video || "",
-                        likes: gown.likes || [],
-                        comments: gown.comments || []
-                    }, { merge: true });
-                } catch (e) {
-                    console.error("Firebase update permission error:", e);
-                }
+            if (error) {
+                alert("Error updating item: " + error.message);
+            } else {
+                alert("Item updated!");
+                fetchCatalog();
             }
         };
 
-        function handleUpdateContact(event) {
-            event.preventDefault();
-            const webInput = document.getElementById('admin-web');
-            const emailInput = document.getElementById('admin-email');
-            const phoneInput = document.getElementById('admin-phone');
-            if (!webInput || !emailInput || !phoneInput) return;
-
-            const web = webInput.value;
-            const email = emailInput.value;
-            const phone = phoneInput.value;
-
-            const contactInfo = { web, email, phone };
-            localStorage.setItem('sf_contact_info', JSON.stringify(contactInfo));
-            
-            loadContactInfo();
-            alert("Contact details updated successfully!");
-        }
-
-        const updateContactForm = document.getElementById('update-contact-form');
-        if (updateContactForm) {
-            updateContactForm.addEventListener('submit', handleUpdateContact);
-        }
-
-        function handleSendToMessenger(event) {
-            event.preventDefault();
-            if (cart.length === 0) {
-                alert("Your liked items list is empty! Please select at least one dress.");
-                return;
-            }
-
-            const nameInput = document.getElementById('client-name');
-            const phoneInput = document.getElementById('client-phone');
-            if (!nameInput || !phoneInput) return;
-
-            const name = nameInput.value;
-            const phone = phoneInput.value;
-
-            const itemsSummary = cart.map(i => {
-                let vnd = getNormalizedVnd(i);
-                let unit = calculatePhpPrice(vnd);
-                return `• [${i.id}] ${i.name} | Qty: ${i.qty} | Subtotal: ₱${(unit * i.qty).toFixed(2)}`;
-            }).join('\n');
-
-            let totalAmount = 0;
-            cart.forEach(i => {
-                let vnd = getNormalizedVnd(i);
-                totalAmount += calculatePhpPrice(vnd) * i.qty;
-            });
-
-            const messengerText = `Hello SimplyFab Page! 👋\n\nI would like to inquire about these liked items:\n\n👤 Name: ${name}\n📞 Phone: ${phone}\n\n👗 Liked Dresses:\n${itemsSummary}\n\n💰 Total Estimated Amount: ₱${totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}\n\nPlease assist me!`;
-            
-            navigator.clipboard.writeText(messengerText).then(() => {
-                alert(`Liked items summary auto-copied to clipboard!\n\nRedirecting to Facebook Messenger—just press Ctrl+V to paste and send your inquiry.`);
-            });
-
-            window.open('https://www.facebook.com/messages/t/110124887067313', '_blank');
-        }
-
-        const sendMessengerForm = document.getElementById('send-messenger-form');
-        if (sendMessengerForm) {
-            sendMessengerForm.addEventListener('submit', handleSendToMessenger);
-        }
-
+        // Delete item
         window.deleteGown = async function(id) {
-            if (confirm(`Are you sure you want to permanently delete item ${id}?`)) {
-                liveGownsCatalog = liveGownsCatalog.filter(g => String(g.id) !== String(id));
-                persistLocalCatalog();
-                renderCatalog();
-                alert(`Dress ${id} removed successfully!`);
+            if (!confirm(`Delete item ${id}?`)) return;
 
-                if (db && isFirestoreHealthy) {
-                    try {
-                        await deleteDoc(doc(db, "gowns_catalog", String(id)));
-                    } catch (e) {
-                        console.error("Firebase delete error:", e);
-                    }
-                }
+            const { error } = await supabaseClient
+                .from('gowns_catalog')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert("Error deleting item: " + error.message);
+            } else {
+                fetchCatalog();
             }
         };
 
-        async function initRealtimeCatalog() {
-            renderCatalog();
+        // Login check for admin mode
+        document.getElementById('visitor-login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('visitor-name').value.trim();
+            if (name.toLowerCase() === ADMIN_NAME.toLowerCase()) {
+                document.getElementById('admin-panel-catalog').classList.add('active');
+                document.getElementById('body-root').classList.add('admin-mode');
+                document.getElementById('admin-toggle-btn-ui').style.display = 'inline-block';
+                alert("Admin mode activated!");
+            }
+            document.getElementById('login-modal').style.display = 'none';
+            document.getElementById('nav-welcome-message').textContent = `Welcome, ${name}!`;
+        });
 
-            if (!db || !isFirestoreHealthy) return;
+        // Realtime subscription so updates sync instantly across viewers
+        supabaseClient
+            .channel('public:gowns_catalog')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'gowns_catalog' }, () => {
+                fetchCatalog();
+            })
+            .subscribe();
 
-            // Live synchronization feed from Firestore collection
-            onSnapshot(collection(db, "gowns_catalog"), (snapshot) => {
-                let remoteGownsMap = new Map();
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    if (data && data.name && data.name !== "undefined") {
-                        if (!data.images || !Array.isArray(data.images) || data.images.length === 0) {
-                            const localMatch = liveGownsCatalog.find(g => g.id === docSnap.id);
-                            data.images = (localMatch && localMatch.images) ? localMatch.images : [
-                                "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
-                            ];
-                        }
-                        remoteGownsMap.set(docSnap.id, { id: docSnap.id, ...data });
-                    }
-                });
-                
-                if (remoteGownsMap.size > 0) {
-                    let combined = [];
-                    remoteGownsMap.forEach(val => combined.push(val));
-                    liveGownsCatalog = combined;
-                    persistLocalCatalog();
-                    renderCatalog();
-                }
-            }, (error) => {
-                console.warn("Firestore snapshot listener error:", error);
-            });
-        }
-
-        checkVisitorSession();
-        initRealtimeCatalog();
-        renderCart();
-        loadContactInfo();
+        // Initial fetch
+        fetchCatalog();
     </script>
 </body>
 </html>
