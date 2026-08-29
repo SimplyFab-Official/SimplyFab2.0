@@ -619,7 +619,7 @@
                         </select>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label for="new-markup-peso">Additional Markup (₱):</label>
+                        <label for="new-markup-peso">Default Additional Markup (₱):</label>
                         <input type="number" id="new-markup-peso" class="form-control" value="700" step="1" required oninput="previewPhpCalculation()">
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
@@ -765,8 +765,8 @@
 
             grid.innerHTML = itemsToRender.map((gown) => {
                 const itemId = gown.id;
-                let vndValue = parseFloat(gown.price_vnd !== undefined ? gown.price_vnd : gown.priceVnd) || 0;
-                let markupVal = gown.markup_peso !== undefined ? parseFloat(gown.markup_peso) : 700;
+                let vndValue = parseFloat(gown.price !== undefined ? gown.price : (gown.price_vnd !== undefined ? gown.price_vnd : 0)) || 0;
+                let markupVal = parseFloat(gown.markup !== undefined ? gown.markup : (gown.markup_peso !== undefined ? gown.markup_peso : 700)) || 0;
                 let userPhpPrice = calculatePhpPrice(vndValue, markupVal);
                 let images = Array.isArray(gown.images) ? gown.images : [];
 
@@ -841,7 +841,7 @@
             wrapper.style.display = 'block';
             list.innerHTML = stagedItems.map((item, index) => `
                 <div class="staged-item-row">
-                    <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | ₫${item.price_vnd.toLocaleString()} + ₱${item.markup_peso} = <strong>₱${calculatePhpPrice(item.price_vnd, item.markup_peso).toFixed(2)}</strong> [${item.images.length} photos]</span>
+                    <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | ₫${item.price.toLocaleString()} + ₱${item.markup} = <strong>₱${calculatePhpPrice(item.price, item.markup).toFixed(2)}</strong> [${item.images.length} photos]</span>
                     <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
                 </div>
             `).join('');
@@ -862,12 +862,12 @@
 
             try {
                 for (const item of stagedItems) {
-                    // FIXED: Changed payload fields to match standard Supabase table columns ('price' and 'markup')
+                    // Send strictly using database columns: id, desc, price, markup, images
                     const payload = {
                         id: item.id,
                         desc: item.desc,
-                        price: item.price_vnd,
-                        markup: item.markup_peso,
+                        price: item.price,
+                        markup: item.markup,
                         images: item.images
                     };
 
@@ -906,8 +906,8 @@
             e.preventDefault();
             const id = document.getElementById('new-custom-id').value;
             const desc = document.getElementById('new-desc').value;
-            const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
-            const markup_peso = parseFloat(document.getElementById('new-markup-peso').value) || 700;
+            const price = parseFloat(document.getElementById('new-price-vnd').value) || 0;
+            const markup = parseFloat(document.getElementById('new-markup-peso').value) || 700;
             const fileInput = document.getElementById('new-imgs');
             
             if (fileInput.files.length < 3) {
@@ -917,7 +917,7 @@
 
             try {
                 const images = await convertFilesToBasePath(fileInput.files);
-                const newItem = { id, desc, price_vnd, markup_peso, images };
+                const newItem = { id, desc, price, markup, images };
 
                 stagedItems.push(newItem);
                 localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
