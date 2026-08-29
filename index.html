@@ -1020,7 +1020,7 @@
             if (!grid) return;
 
             if (itemsToRender.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No matching items found in the catalogue.</p>`;
+                grid.innerHTML = `<p style="grid-icon: 1/-1; text-align: center; color: #777; grid-column: 1/-1;">No matching items found in the catalogue.</p>`;
                 return;
             }
 
@@ -1216,49 +1216,6 @@
 
             try {
                 const newImages = await convertFilesToBasePath(fileInput.files);
-
-                let duplicateFound = false;
-                let duplicateSource = "";
-
-                for (const gown of liveGownsCatalog) {
-                    if (Array.isArray(gown.images)) {
-                        for (const existingImg of gown.images) {
-                            for (const newImg of newImages) {
-                                if (existingImg === newImg) {
-                                    duplicateFound = true;
-                                    duplicateSource = `Live Item Code: ${gown.id}`;
-                                    break;
-                                }
-                            }
-                            if (duplicateFound) break;
-                        }
-                    }
-                    if (duplicateFound) break;
-                }
-
-                if (!duplicateFound) {
-                    for (const staged of stagedItems) {
-                        if (Array.isArray(staged.images)) {
-                            for (const stagedImg of staged.images) {
-                                for (const newImg of newImages) {
-                                    if (stagedImg === newImg) {
-                                        duplicateFound = true;
-                                        duplicateSource = `Staged Item Code: ${staged.id}`;
-                                        break;
-                                    }
-                                }
-                                if (duplicateFound) break;
-                            }
-                        }
-                        if (duplicateFound) break;
-                    }
-                }
-
-                if (duplicateFound) {
-                    alert(`❌ Duplicate Error: One or more selected pictures match an existing image already in the catalog or staged list (${duplicateSource}). Please use unique images.`);
-                    return;
-                }
-
                 const newItem = { id, desc, colors, price_vnd, markup_peso, images: newImages };
 
                 stagedItems.push(newItem);
@@ -1302,31 +1259,6 @@
                         return;
                     }
                     const newImages = await convertFilesToBasePath(fileInput.files);
-
-                    let duplicateFound = false;
-                    let duplicateSource = "";
-
-                    for (const gown of liveGownsCatalog) {
-                        if (gown.id !== id && Array.isArray(gown.images)) {
-                            for (const existingImg of gown.images) {
-                                for (const newImg of newImages) {
-                                    if (existingImg === newImg) {
-                                        duplicateFound = true;
-                                        duplicateSource = `Live Item Code: ${gown.id}`;
-                                        break;
-                                    }
-                                }
-                                if (duplicateFound) break;
-                            }
-                        }
-                        if (duplicateFound) break;
-                    }
-
-                    if (duplicateFound) {
-                        alert(`❌ Duplicate Error: Replacement pictures match another item in the catalog (${duplicateSource}). Please select unique pictures.`);
-                        return;
-                    }
-
                     updatePayload.images = newImages;
                 }
 
