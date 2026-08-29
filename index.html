@@ -413,6 +413,7 @@
 
         .form-group {
             margin-bottom: 15px;
+            text-align: left;
         }
 
         .form-group label {
@@ -482,13 +483,17 @@
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
-            <p>Enter your name to view the catalog prices.</p>
+            <p>Please enter your Name and Phone Number to continue.</p>
             <form id="visitor-login-form">
-                <div class="form-group" style="text-align: left;">
-                    <label for="visitor-name">Your Name / Admin Code:</label>
+                <div class="form-group">
+                    <label for="visitor-name">Your Name:</label>
                     <input type="text" id="visitor-name" class="form-control" placeholder="e.g. Maria or SimplyFab" required>
                 </div>
-                <button type="submit" class="btn-submit" style="background-color: var(--primary);">View Catalog</button>
+                <div class="form-group">
+                    <label for="visitor-phone">Phone Number / Admin Code:</label>
+                    <input type="text" id="visitor-phone" class="form-control" placeholder="e.g. 09123456789 or 021910" required>
+                </div>
+                <button type="submit" class="btn-submit" style="background-color: var(--primary);">Enter Catalogue</button>
             </form>
         </div>
     </div>
@@ -571,6 +576,7 @@
         const VND_TO_PHP_RATIO = 2 / 800;
         const ADMIN_MARKUP = 700;
         const ADMIN_NAME = "SimplyFab";
+        const ADMIN_CODE = "021910";
 
         const defaultGowns = [
             {
@@ -781,12 +787,17 @@
         document.getElementById('visitor-login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const name = document.getElementById('visitor-name').value.trim();
-            if (name.toLowerCase() === ADMIN_NAME.toLowerCase()) {
+            const phone = document.getElementById('visitor-phone').value.trim();
+
+            if (name.toLowerCase() === ADMIN_NAME.toLowerCase() && phone === ADMIN_CODE) {
                 document.getElementById('admin-panel-catalog').classList.add('active');
                 document.getElementById('body-root').classList.add('admin-mode');
                 document.getElementById('admin-toggle-btn-ui').style.display = 'inline-block';
-                alert("Admin mode activated!");
+                alert("Welcome Admin! Admin Console unlocked.");
+            } else {
+                alert(`Welcome, ${name}! Enjoy browsing the catalog.`);
             }
+
             document.getElementById('login-modal').style.display = 'none';
             document.getElementById('nav-welcome-message').textContent = `Welcome, ${name}!`;
         });
