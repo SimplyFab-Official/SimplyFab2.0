@@ -1228,7 +1228,6 @@
             }
 
             try {
-                // Upload images to Supabase Storage bucket 'gown-images'
                 const imagePublicUrls = await uploadFilesToSupabaseStorage(fileInput.files, id);
                 const newItem = { id, desc, colors, price_vnd, markup_peso, images: imagePublicUrls };
 
