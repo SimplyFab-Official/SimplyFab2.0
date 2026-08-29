@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
-    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -446,6 +445,18 @@
             margin-top: 10px;
         }
 
+        .btn-sync {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
         footer {
             background-color: #333;
             color: #fff;
@@ -458,12 +469,10 @@
 </head>
 <body id="body-root">
 
-    <!-- Lightbox Modal -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="Enlarged Dress Design">
     </div>
 
-    <!-- Simple Login Modal -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -478,7 +487,6 @@
         </div>
     </div>
 
-    <!-- Messenger Floating Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
 
     <nav>
@@ -504,9 +512,11 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
-        <!-- Admin Panel for Adding Items -->
         <div id="admin-panel-catalog" class="admin-panel">
-            <h3>⚙️ Admin Panel: Add New Dress Item</h3>
+            <h3>⚙️ Admin Console & Sync</h3>
+            <button type="button" class="btn-sync" onclick="migrateLocalToSupabase()">🔄 Migrate Firebase Items to Supabase Now</button>
+            
+            <h3 style="margin-top: 15px;">Add New Dress Item</h3>
             <form id="add-gown-form">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
@@ -535,7 +545,6 @@
             </form>
         </div>
 
-        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -548,7 +557,6 @@
     </footer>
 
     <script>
-        // Updated with your Supabase Project URL and Anon API Key
         const SUPABASE_URL = "https://bxqdecdhfjhnuqmstmra.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4cWRlY2RoZmpobnVxbXN0bXJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjQ4OTcxODAsImV4cCI6MjA0MDQ3MzE4MH0.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ey";
 
@@ -574,7 +582,6 @@
             document.getElementById('image-lightbox').classList.remove('active');
         };
 
-        // Fetch catalog items from Supabase database
         async function fetchCatalog() {
             const { data, error } = await supabaseClient
                 .from('gowns_catalog')
@@ -586,9 +593,20 @@
                 return;
             }
 
-            if (data) {
+            if (data && data.length > 0) {
                 liveGownsCatalog = data;
                 renderCatalog();
+            } else {
+                // If Supabase table is empty, fall back to local browser backup so items aren't lost
+                const localBackup = localStorage.getItem('sf_local_catalog_backup');
+                if (localBackup) {
+                    try {
+                        liveGownsCatalog = JSON.parse(localBackup);
+                        renderCatalog();
+                    } catch(e) {}
+                } else {
+                    renderCatalog();
+                }
             }
         }
 
@@ -597,13 +615,13 @@
             if (!grid) return;
 
             if (liveGownsCatalog.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog yet.</p>`;
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog yet. Log in as Admin and click Migrate or Add New Dress.</p>`;
                 return;
             }
 
             grid.innerHTML = liveGownsCatalog.map((gown) => {
                 const itemId = gown.id;
-                let vndValue = parseFloat(gown.price_vnd) || 0;
+                let vndValue = parseFloat(gown.price_vnd || gown.priceVnd) || 0;
                 let userPhpPrice = calculatePhpPrice(vndValue);
                 let images = gown.images || [];
 
@@ -623,7 +641,6 @@
                             <p>${gown.desc || ''}</p>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
-                            <!-- Inline Admin Edit Box -->
                             <div class="admin-price-box">
                                 <label>Edit Name:</label>
                                 <div class="admin-price-input-group">
@@ -641,7 +658,33 @@
             }).join('');
         }
 
-        // Add new gown handler with auto-scroll to catalog
+        // Migrate local/Firebase backup items into Supabase
+        window.migrateLocalToSupabase = async function() {
+            const localBackup = localStorage.getItem('sf_local_catalog_backup');
+            if (!localBackup) {
+                alert("No local items found to migrate.");
+                return;
+            }
+
+            try {
+                const items = JSON.parse(localBackup);
+                for (const item of items) {
+                    const cleanItem = {
+                        id: item.id,
+                        name: item.name,
+                        desc: item.desc || "",
+                        price_vnd: parseFloat(item.price_vnd || item.priceVnd || 500000),
+                        images: item.images || []
+                    };
+                    await supabaseClient.from('gowns_catalog').upsert(cleanItem);
+                }
+                alert("Successfully migrated all items to Supabase!");
+                fetchCatalog();
+            } catch (err) {
+                alert("Migration error: " + err.message);
+            }
+        };
+
         document.getElementById('add-gown-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('new-custom-id').value.trim().toUpperCase();
@@ -679,7 +722,6 @@
             }
         });
 
-        // Save inline edit
         window.saveInlineItem = async function(id) {
             const name = document.getElementById(`name-input-${id}`).value;
             const price_vnd = parseFloat(document.getElementById(`vnd-input-${id}`).value);
@@ -697,7 +739,6 @@
             }
         };
 
-        // Delete item
         window.deleteGown = async function(id) {
             if (!confirm(`Delete item ${id}?`)) return;
 
@@ -713,7 +754,6 @@
             }
         };
 
-        // Login check for admin mode
         document.getElementById('visitor-login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const name = document.getElementById('visitor-name').value.trim();
@@ -727,7 +767,6 @@
             document.getElementById('nav-welcome-message').textContent = `Welcome, ${name}!`;
         });
 
-        // Realtime subscription so updates sync instantly across viewers
         supabaseClient
             .channel('public:gowns_catalog')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'gowns_catalog' }, () => {
@@ -735,7 +774,6 @@
             })
             .subscribe();
 
-        // Initial fetch
         fetchCatalog();
     </script>
 </body>
