@@ -305,12 +305,12 @@
             height: 100%;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
             scroll-behavior: smooth;
         }
 
         .carousel-track::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
+            display: none;
         }
 
         .carousel-slide {
@@ -711,7 +711,7 @@
                 const itemId = gown.id;
                 let vndValue = parseFloat(gown.price_vnd || gown.priceVnd) || 0;
                 let userPhpPrice = calculatePhpPrice(vndValue);
-                let images = gown.images || [];
+                let images = Array.isArray(gown.images) ? gown.images : [];
 
                 let slidesHtml = images.map(imgUrl => `
                     <div class="carousel-slide">
@@ -726,7 +726,7 @@
 
                 return `
                     <div class="card" id="card-${itemId}">
-                        <div class="item-badge">${itemId}</div>
+                        <div class="item-badge">${itemId} (${images.length} photos)</div>
                         <button class="btn-delete-item" onclick="deleteGown('${itemId}')" title="Delete item">×</button>
                         <div class="carousel-container">
                             <div class="carousel-track" id="track-${itemId}">
@@ -767,6 +767,19 @@
             }
         };
 
+        // Helper function to convert multiple files cleanly using Promise.all
+        async function convertFilesToBasePath(fileList) {
+            const promises = Array.from(fileList).map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            });
+            return await Promise.all(promises);
+        }
+
         document.getElementById('add-gown-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('new-custom-id').value.trim().toUpperCase();
@@ -780,27 +793,23 @@
                 return;
             }
 
-            let images = [];
-            for (let file of Array.from(fileInput.files)) {
-                const reader = await new Promise(resolve => {
-                    const r = new FileReader();
-                    r.onload = e => resolve(e.target.result);
-                    r.readAsDataURL(file);
-                });
-                images.push(reader);
-            }
+            try {
+                const images = await convertFilesToBasePath(fileInput.files);
 
-            const { error } = await supabaseClient
-                .from('gowns_catalog')
-                .upsert({ id, name, desc, price_vnd, images });
+                const { error } = await supabaseClient
+                    .from('gowns_catalog')
+                    .upsert({ id, name, desc, price_vnd, images });
 
-            if (error) {
-                alert("Error saving item: " + error.message);
-            } else {
-                alert(`Item ${id} saved and synced to Supabase successfully!`);
-                e.target.reset();
-                document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });
-                fetchCatalog();
+                if (error) {
+                    alert("Error saving item: " + error.message);
+                } else {
+                    alert(`Item ${id} with ${images.length} pictures saved and synced to Supabase successfully!`);
+                    e.target.reset();
+                    document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });
+                    fetchCatalog();
+                }
+            } catch (err) {
+                alert("Error processing image files: " + err.message);
             }
         });
 
@@ -810,33 +819,29 @@
 
             let updatePayload = { price_vnd };
 
-            if (fileInput.files.length > 0) {
-                if (fileInput.files.length < 3) {
-                    alert("Please select at least 3 replacement pictures.");
-                    return;
+            try {
+                if (fileInput.files.length > 0) {
+                    if (fileInput.files.length < 3) {
+                        alert("Please select at least 3 replacement pictures.");
+                        return;
+                    }
+                    const newImages = await convertFilesToBasePath(fileInput.files);
+                    updatePayload.images = newImages;
                 }
-                let newImages = [];
-                for (let file of Array.from(fileInput.files)) {
-                    const reader = await new Promise(resolve => {
-                        const r = new FileReader();
-                        r.onload = e => resolve(e.target.result);
-                        r.readAsDataURL(file);
-                    });
-                    newImages.push(reader);
+
+                const { error } = await supabaseClient
+                    .from('gowns_catalog')
+                    .update(updatePayload)
+                    .eq('id', id);
+
+                if (error) {
+                    alert("Error updating item: " + error.message);
+                } else {
+                    alert("Item updated and synced successfully!");
+                    fetchCatalog();
                 }
-                updatePayload.images = newImages;
-            }
-
-            const { error } = await supabaseClient
-                .from('gowns_catalog')
-                .update(updatePayload)
-                .eq('id', id);
-
-            if (error) {
-                alert("Error updating item: " + error.message);
-            } else {
-                alert("Item updated and synced successfully!");
-                fetchCatalog();
+            } catch (err) {
+                alert("Error processing replacement images: " + err.message);
             }
         };
 
