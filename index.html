@@ -402,6 +402,12 @@
             font-size: 13px;
             color: var(--text-light);
             margin-bottom: 4px;
+            display: none; /* Hidden on user view by default */
+        }
+
+        /* Visible only when logged in as Admin */
+        .admin-mode .price-details {
+            display: block; 
         }
 
         .price {
@@ -675,7 +681,6 @@
         let liveGownsCatalog = [];
         let stagedItems = JSON.parse(localStorage.getItem('simplyfab_staged_items')) || [];
 
-        // Load saved global settings or defaults
         let globalSettings = JSON.parse(localStorage.getItem('simplyfab_global_settings')) || {
             ratio: 2 / 800,
             markup: 700
@@ -751,12 +756,14 @@
                     .select('*')
                     .order('id', { ascending: true });
                 
-                if (error || !data) {
+                if (error) {
+                    console.error("Supabase fetch error:", error.message);
                     liveGownsCatalog = [];
                 } else {
-                    liveGownsCatalog = data;
+                    liveGownsCatalog = data || [];
                 }
             } catch (err) {
+                console.error("Fetch exception:", err);
                 liveGownsCatalog = [];
             }
             renderCatalog(liveGownsCatalog);
@@ -784,7 +791,7 @@
 
             grid.innerHTML = itemsToRender.map((gown) => {
                 const itemId = gown.id;
-                let vndValue = parseFloat(gown.price_vnd || gown.priceVnd) || 0;
+                let vndValue = parseFloat(gown.price_vnd !== undefined ? gown.price_vnd : gown.priceVnd) || 0;
                 let userPhpPrice = calculatePhpPrice(vndValue);
                 let images = Array.isArray(gown.images) ? gown.images : [];
 
@@ -876,13 +883,28 @@
 
             try {
                 for (const item of stagedItems) {
-                    await supabaseClient.from('gowns_catalog').upsert(item);
+                    const payload = {
+                        id: item.id,
+                        name: item.name,
+                        desc: item.desc,
+                        price_vnd: item.price_vnd,
+                        images: item.images
+                    };
+
+                    const { error } = await supabaseClient
+                        .from('gowns_catalog')
+                        .upsert(payload);
+
+                    if (error) {
+                        throw new Error(error.message);
+                    }
                 }
+
                 alert("🚀 All staged items successfully published and synced to Supabase!");
                 stagedItems = [];
                 localStorage.removeItem('simplyfab_staged_items');
                 renderStagedList();
-                fetchCatalog();
+                await fetchCatalog();
             } catch (err) {
                 alert("Publishing error: " + err.message);
             }
