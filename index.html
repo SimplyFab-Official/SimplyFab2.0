@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
+    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -198,7 +199,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 15px;
         }
@@ -207,6 +208,23 @@
             font-size: 30px;
             color: var(--primary);
             margin: 0;
+        }
+
+        .search-bar-container {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        .search-bar-container input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            background: white;
         }
 
         .admin-panel {
@@ -409,7 +427,7 @@
             margin-bottom: 4px;
         }
 
-        .admin-price-input-group input {
+        .admin-price-input-group input, .admin-price-input-group select {
             flex: 1;
             padding: 6px;
             border: 1px solid #ccc;
@@ -517,10 +535,12 @@
 </head>
 <body id="body-root">
 
+    <!-- Lightbox Modal -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="">
     </div>
 
+    <!-- Visitor Login Modal (Disguised Admin Gate) -->
     <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -539,6 +559,7 @@
         </div>
     </div>
 
+    <!-- Messenger Floating Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
 
     <nav>
@@ -563,15 +584,21 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
+        <!-- Search Bar for Users and Admin -->
+        <div class="search-bar-container">
+            <input type="text" id="search-input" placeholder="🔍 Search Item Code (e.g. SF0001)..." oninput="filterCatalog()">
+        </div>
+
+        <!-- Admin Panel for Staging Items & Publishing -->
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>⚙️ Admin Management Console</h3>
             <button type="button" class="btn-publish" onclick="publishStagedItems()">🚀 Publish to Catalog (<span id="staged-count">0</span> items ready)</button>
             
-            <h3 style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item (Auto Item Code & Size)</h3>
+            <h3 style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item (Auto SF Item Code & Size)</h3>
             <form id="add-gown-form">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
-                        <label for="new-custom-id">Item ID (Auto):</label>
+                        <label for="new-custom-id">Item Code (Auto):</label>
                         <input type="text" id="new-custom-id" class="form-control" readonly style="background-color: #f1f1f1; font-weight: bold;">
                     </div>
                     <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
@@ -601,6 +628,7 @@
             </div>
         </div>
 
+        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -622,42 +650,6 @@
         const ADMIN_MARKUP = 700;
         const ADMIN_NAME = "SimplyFab";
         const ADMIN_CODE = "021910";
-
-        const defaultGowns = [
-            {
-                id: "00001",
-                name: "Dress",
-                desc: "Small",
-                price_vnd: 720000,
-                images: [
-                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
-                ]
-            },
-            {
-                id: "00002",
-                name: "Dress",
-                desc: "Small and Medium",
-                price_vnd: 600000,
-                images: [
-                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80"
-                ]
-            },
-            {
-                id: "00003",
-                name: "Dress",
-                desc: "Small, Medium and Large",
-                price_vnd: 920000,
-                images: [
-                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
-                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
-                ]
-            }
-        ];
 
         let liveGownsCatalog = [];
         let stagedItems = JSON.parse(localStorage.getItem('simplyfab_staged_items')) || [];
@@ -685,20 +677,24 @@
         };
 
         async function generateNextItemCode() {
-            let maxId = 0;
+            let maxNum = 0;
 
             liveGownsCatalog.forEach(item => {
-                let num = parseInt(item.id, 10);
-                if (!isNaN(num) && num > maxId) maxId = num;
+                if (item.id && item.id.startsWith("SF")) {
+                    let num = parseInt(item.id.replace("SF", ""), 10);
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
             });
 
             stagedItems.forEach(item => {
-                let num = parseInt(item.id, 10);
-                if (!isNaN(num) && num > maxId) maxId = num;
+                if (item.id && item.id.startsWith("SF")) {
+                    let num = parseInt(item.id.replace("SF", ""), 10);
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
             });
 
-            let nextNum = maxId + 1;
-            let paddedId = String(nextNum).padStart(5, '0');
+            let nextNum = maxNum + 1;
+            let paddedId = "SF" + String(nextNum).padStart(4, '0');
             document.getElementById('new-custom-id').value = paddedId;
         }
 
@@ -709,28 +705,38 @@
                     .select('*')
                     .order('id', { ascending: true });
                 
-                if (error || !data || data.length === 0) {
-                    liveGownsCatalog = defaultGowns;
+                if (error || !data) {
+                    liveGownsCatalog = [];
                 } else {
                     liveGownsCatalog = data;
                 }
             } catch (err) {
-                liveGownsCatalog = defaultGowns;
+                liveGownsCatalog = [];
             }
-            renderCatalog();
+            renderCatalog(liveGownsCatalog);
             generateNextItemCode();
         }
 
-        function renderCatalog() {
+        function filterCatalog() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            if (!query) {
+                renderCatalog(liveGownsCatalog);
+                return;
+            }
+            const filtered = liveGownsCatalog.filter(gown => gown.id.toLowerCase().includes(query));
+            renderCatalog(filtered);
+        }
+
+        function renderCatalog(itemsToRender) {
             const grid = document.getElementById('catalog-grid');
             if (!grid) return;
 
-            if (liveGownsCatalog.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog yet.</p>`;
+            if (itemsToRender.length === 0) {
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No matching items found.</p>`;
                 return;
             }
 
-            grid.innerHTML = liveGownsCatalog.map((gown) => {
+            grid.innerHTML = itemsToRender.map((gown) => {
                 const itemId = gown.id;
                 let vndValue = parseFloat(gown.price_vnd || gown.priceVnd) || 0;
                 let userPhpPrice = calculatePhpPrice(vndValue);
@@ -749,7 +755,7 @@
 
                 return `
                     <div class="card" id="card-${itemId}">
-                        <div class="item-badge">ID: ${itemId}</div>
+                        <div class="item-badge">Code: ${itemId}</div>
                         <button class="btn-delete-item" onclick="deleteGown('${itemId}')" title="Delete item">×</button>
                         <div class="carousel-container">
                             <div class="carousel-track" id="track-${itemId}">
@@ -762,6 +768,14 @@
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
                             <div class="admin-price-box">
+                                <label>Edit Size:</label>
+                                <div class="admin-price-input-group">
+                                    <select id="desc-input-${itemId}">
+                                        <option value="Small" ${gown.desc === 'Small' ? 'selected' : ''}>Small</option>
+                                        <option value="Small and Medium" ${gown.desc === 'Small and Medium' ? 'selected' : ''}>Small and Medium</option>
+                                        <option value="Small, Medium and Large" ${gown.desc === 'Small, Medium and Large' ? 'selected' : ''}>Small, Medium and Large</option>
+                                    </select>
+                                </div>
                                 <label>Edit VND Price (₫):</label>
                                 <div class="admin-price-input-group">
                                     <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}">
@@ -794,7 +808,7 @@
             wrapper.style.display = 'block';
             list.innerHTML = stagedItems.map((item, index) => `
                 <div class="staged-item-row">
-                    <span><strong>ID: ${item.id}</strong> - Size: ${item.desc} (₱${calculatePhpPrice(item.price_vnd).toFixed(2)}) [${item.images.length} photos]</span>
+                    <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} (₱${calculatePhpPrice(item.price_vnd).toFixed(2)}) [${item.images.length} photos]</span>
                     <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
                 </div>
             `).join('');
@@ -869,11 +883,14 @@
         });
 
         window.saveInlineItem = async function(id) {
+            const descInput = document.getElementById(`desc-input-${id}`);
             const priceInput = document.getElementById(`vnd-input-${id}`);
+            
+            const desc = descInput ? descInput.value : '';
             const price_vnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
             const fileInput = document.getElementById(`img-input-${id}`);
 
-            let updatePayload = { price_vnd };
+            let updatePayload = { desc, price_vnd };
 
             try {
                 if (fileInput && fileInput.files.length > 0) {
@@ -913,7 +930,7 @@
                 alert("Error deleting item: " + error.message);
             } else {
                 liveGownsCatalog = liveGownsCatalog.filter(gown => gown.id !== id);
-                renderCatalog();
+                renderCatalog(liveGownsCatalog);
                 generateNextItemCode();
             }
         };
