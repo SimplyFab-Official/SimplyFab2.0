@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
+    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -643,10 +644,12 @@
 </head>
 <body id="body-root">
 
+    <!-- Lightbox Modal -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="">
     </div>
 
+    <!-- Visitor Login Modal (Admin code hidden completely) -->
     <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -665,6 +668,7 @@
         </div>
     </div>
 
+    <!-- User Checklist / Wishlist Modal -->
     <div id="cart-modal" class="cart-modal-overlay">
         <div class="cart-modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -674,7 +678,8 @@
             <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">Review items you would like to buy with their sizes, colors, and total amount. Copy your listing below to send directly to our Messenger chat!</p>
             
             <div id="cart-items-container" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto;">
-                </div>
+                <!-- Populated dynamically -->
+            </div>
 
             <div class="form-group">
                 <label>Generated Message for Seller (Copy & Paste):</label>
@@ -688,6 +693,7 @@
         </div>
     </div>
 
+    <!-- Floating Action Buttons -->
     <div class="floating-buttons-container">
         <button class="floating-action-btn" onclick="toggleCartModal()" title="View Purchase Checklist">
             🛒
@@ -718,10 +724,12 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
+        <!-- Search Bar for Users and Admin -->
         <div class="search-bar-container">
             <input type="text" id="search-input" placeholder="🔍 Search Item Code (e.g. SF0001)..." oninput="filterCatalog()">
         </div>
 
+        <!-- Admin Panel for Staging Items & Publishing -->
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>Add New Dress Item</h3>
             <form id="add-gown-form">
@@ -742,7 +750,7 @@
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-colors">Available Colors (comma separated):</label>
-                        <input type="text" id="new-colors" class="form-control" placeholder="e.g. Pink, White, Blue" value="Standard">
+                        <input type="text" id="new-colors" class="form-control" placeholder="e.g. Pink, White, Blue" value="">
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-price-vnd">Price VND (₫):</label>
@@ -771,6 +779,7 @@
             </div>
         </div>
 
+        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -840,7 +849,12 @@
             const sizeSelect = document.getElementById(`size-select-${itemId}`);
             const colorSelect = document.getElementById(`color-select-${itemId}`);
             const selectedSize = sizeSelect ? sizeSelect.value : 'Standard';
-            const selectedColor = colorSelect ? colorSelect.value : 'Standard';
+            const selectedColor = colorSelect ? colorSelect.value : '';
+
+            if (!selectedColor) {
+                alert("Please select a color before adding to your checklist!");
+                return;
+            }
 
             const gown = liveGownsCatalog.find(g => (g.id || g.name) === itemId);
             if (!gown) return;
@@ -1015,8 +1029,7 @@
                 let userPhpPrice = calculatePhpPrice(vndValue, markupVal);
                 let images = Array.isArray(gown.images) ? gown.images : [];
 
-                // Parse colors list from gown data (supports stored strings or arrays)
-                let colorsList = ["Standard"];
+                let colorsList = [];
                 if (gown.colors) {
                     if (typeof gown.colors === 'string') {
                         colorsList = gown.colors.split(',').map(c => c.trim()).filter(Boolean);
@@ -1024,7 +1037,8 @@
                         colorsList = gown.colors;
                     }
                 }
-                let colorOptionsHtml = colorsList.map(c => `<option value="${c}">${c}</option>`).join('');
+                
+                let colorOptionsHtml = `<option value="" disabled selected>Select Color</option>` + colorsList.map(c => `<option value="${c}">${c}</option>`).join('');
 
                 let slidesHtml = images.map(imgUrl => `
                     <div class="carousel-slide">
@@ -1052,6 +1066,7 @@
                             <div class="price-details">Original Price: ₫${vndValue.toLocaleString('en-US')} (+₱${markupVal} markup)</div>
                             <div class="price" id="preview-price-${itemId}">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
+                            <!-- User Size, Color Dropdowns & Checklist Add Button -->
                             <div class="user-action-row">
                                 <select id="size-select-${itemId}" title="Select Size">
                                     <option value="Small">Small</option>
@@ -1077,7 +1092,7 @@
                                 </div>
                                 <label>Edit Colors (comma separated):</label>
                                 <div class="admin-price-input-group">
-                                    <input type="text" id="colors-input-${itemId}" value="${Array.isArray(gown.colors) ? gown.colors.join(', ') : (gown.colors || 'Standard')}">
+                                    <input type="text" id="colors-input-${itemId}" value="${Array.isArray(gown.colors) ? gown.colors.join(', ') : (gown.colors || '')}">
                                 </div>
                                 <label>Edit VND Price (₫):</label>
                                 <div class="admin-price-input-group">
@@ -1185,10 +1200,15 @@
             e.preventDefault();
             const id = document.getElementById('new-custom-id').value;
             const desc = document.getElementById('new-desc').value;
-            const colors = document.getElementById('new-colors').value.trim() || "Standard";
+            const colors = document.getElementById('new-colors').value.trim();
             const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
             const markup_peso = parseFloat(document.getElementById('new-markup-peso').value) || 700;
             const fileInput = document.getElementById('new-imgs');
+
+            if (!colors) {
+                alert("Please specify the available colors.");
+                return;
+            }
             
             if (fileInput.files.length < 3) {
                 alert("Please select at least 3 pictures.");
@@ -1248,7 +1268,6 @@
                 alert(`Item ${id} added to staged list below! Click 'Publish to Catalog' when you are ready.`);
                 e.target.reset();
                 document.getElementById('new-markup-peso').value = "700";
-                document.getElementById('new-colors').value = "Standard";
                 document.getElementById('calc-preview').textContent = "PHP Total: ₱0.00";
                 renderStagedList();
                 generateNextItemCode();
@@ -1264,7 +1283,7 @@
             const markupInput = document.getElementById(`markup-input-${id}`);
 
             const desc = descInput ? descInput.value : '';
-            const colors = colorsInput ? colorsInput.value.trim() : 'Standard';
+            const colors = colorsInput ? colorsInput.value.trim() : '';
             const price_vnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
             const default_markup = markupInput ? parseFloat(markupInput.value) || 700 : 700;
             const fileInput = document.getElementById(`img-input-${id}`);
