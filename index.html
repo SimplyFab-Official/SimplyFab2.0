@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
+    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -513,10 +514,12 @@
 </head>
 <body id="body-root">
 
+    <!-- Lightbox Modal (Hidden by default) -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
-        <img id="lightbox-img" src="" alt="Enlarged Dress Design">
+        <img id="lightbox-img" src="" alt="">
     </div>
 
+    <!-- Login Modal for Visitor & Admin -->
     <div id="login-modal" class="modal-overlay">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -535,6 +538,7 @@
         </div>
     </div>
 
+    <!-- Messenger Floating Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
 
     <nav>
@@ -560,6 +564,7 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
+        <!-- Admin Panel for Adding Items & Syncing -->
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>⚙️ Admin Console & Data Migration</h3>
             <button type="button" class="btn-sync" onclick="migrateLocalToSupabase()">🔄 Push Default Catalog Items to Supabase Now</button>
@@ -592,6 +597,7 @@
             </form>
         </div>
 
+        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -658,6 +664,7 @@
         }
 
         window.openLightbox = function(imgSrc) {
+            if (!imgSrc) return;
             document.getElementById('lightbox-img').src = imgSrc;
             document.getElementById('image-lightbox').classList.add('active');
         };
@@ -813,14 +820,14 @@
         });
 
         window.saveInlineItem = async function(id) {
-            // Explicitly parse price as a clean number before updating
-            const price_vnd = parseFloat(document.getElementById(`vnd-input-${id}`).value) || 0;
+            const priceInput = document.getElementById(`vnd-input-${id}`);
+            const price_vnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
             const fileInput = document.getElementById(`img-input-${id}`);
 
             let updatePayload = { price_vnd };
 
             try {
-                if (fileInput.files.length > 0) {
+                if (fileInput && fileInput.files.length > 0) {
                     if (fileInput.files.length < 3) {
                         alert("Please select at least 3 replacement pictures.");
                         return;
