@@ -517,21 +517,20 @@
         <img id="lightbox-img" src="" alt="">
     </div>
 
-    <div id="admin-login-modal" class="modal-overlay">
+    <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
-            <h2>🔒 Admin Console Login</h2>
-            <p>Enter admin credentials to unlock management tools.</p>
+            <h2>✨ SimplyFab Dress Catalogue</h2>
+            <p>Please enter your Name and Phone Number to view our exclusive collection.</p>
             <form id="admin-auth-form">
                 <div class="form-group">
-                    <label for="admin-user-input">Admin Username:</label>
-                    <input type="text" id="admin-user-input" class="form-control" placeholder="SimplyFab" required>
+                    <label for="admin-user-input">Your Name:</label>
+                    <input type="text" id="admin-user-input" class="form-control" placeholder="e.g. Maria Santos" required>
                 </div>
                 <div class="form-group">
-                    <label for="admin-pass-input">Admin Password / Code:</label>
-                    <input type="password" id="admin-pass-input" class="form-control" placeholder="Enter password code" required>
+                    <label for="admin-pass-input">Phone Number:</label>
+                    <input type="text" id="admin-pass-input" class="form-control" placeholder="e.g. 09123456789" required>
                 </div>
-                <button type="submit" class="btn-submit" style="background-color: var(--primary);">Login</button>
-                <button type="button" class="btn-submit" style="background-color: #ccc; color: #333; margin-top: 8px;" onclick="closeAdminLoginModal()">Cancel</button>
+                <button type="submit" class="btn-submit" style="background-color: var(--primary);">View Catalogue</button>
             </form>
         </div>
     </div>
@@ -541,12 +540,12 @@
     <nav>
         <a href="#" class="nav-brand">
             ✨ SimplyFab Dress Catalogue
-            <span class="nav-welcome-tag" id="nav-welcome-message">Welcome, Valued Guest!</span>
+            <span class="nav-welcome-tag" id="nav-welcome-message">Welcome, Guest!</span>
         </a>
         <ul class="nav-links">
             <li><a href="#home">Home</a></li>
             <li><a href="#catalog">Dress Collection</a></li>
-            <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" type="button" onclick="promptAdminLogin()">🔒 Admin Console</button></li>
+            <li><button id="admin-toggle-btn-ui" class="admin-toggle-btn" type="button" onclick="promptAdminLogin()" style="display: none;">🔒 Admin</button></li>
         </ul>
     </nav>
 
@@ -613,7 +612,7 @@
         const VND_TO_PHP_RATIO = 2 / 800;
         const ADMIN_MARKUP = 700;
         const ADMIN_NAME = "SimplyFab";
-        const ADMIN_CODE = "021910"; // Securely handled internally
+        const ADMIN_CODE = "021910";
 
         const defaultGowns = [
             {
@@ -666,14 +665,6 @@
 
         window.closeLightbox = function() {
             document.getElementById('image-lightbox').classList.remove('active');
-        };
-
-        window.promptAdminLogin = function() {
-            document.getElementById('admin-login-modal').style.display = 'flex';
-        };
-
-        window.closeAdminLoginModal = function() {
-            document.getElementById('admin-login-modal').style.display = 'none';
         };
 
         window.scrollCarousel = function(itemId, direction) {
@@ -866,7 +857,7 @@
             }
         };
 
-        // Admin Auth Form Handler (Safely checks against hidden constants without exposing them in placeholders or text)
+        // Disguised Form Handler: Normal visitors submit their name/phone, but typing your exact Admin name and passcode unlocks admin mode!
         document.getElementById('admin-auth-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const username = document.getElementById('admin-user-input').value.trim();
@@ -877,9 +868,9 @@
                 document.getElementById('body-root').classList.add('admin-mode');
                 document.getElementById('admin-login-modal').style.display = 'none';
                 document.getElementById('nav-welcome-message').textContent = `Welcome, Admin!`;
-                alert("Admin Console unlocked successfully!");
             } else {
-                alert("Invalid username or password code!");
+                document.getElementById('admin-login-modal').style.display = 'none';
+                document.getElementById('nav-welcome-message').textContent = `Welcome, ${username}!`;
             }
         });
 
