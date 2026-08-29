@@ -559,8 +559,8 @@
                     <input type="text" id="admin-user-input" class="form-control" placeholder="e.g. Maria Santos" required>
                 </div>
                 <div class="form-group">
-                    <label for="admin-pass-input">Phone Number:</label>
-                    <input type="text" id="admin-pass-input" class="form-control" placeholder="e.g. 09123456789" required>
+                    <label for="admin-pass-input">Phone Number (Admin code: 021910):</label>
+                    <input type="text" id="admin-pass-input" class="form-control" placeholder="e.g. 09123456789 or 021910" required>
                 </div>
                 <button type="submit" class="btn-submit" style="background-color: var(--primary);">View Catalogue</button>
             </form>
@@ -713,7 +713,8 @@
 
             let nextNum = maxNum + 1;
             let paddedId = "SF" + String(nextNum).padStart(4, '0');
-            document.getElementById('new-custom-id').value = paddedId;
+            const customIdEl = document.getElementById('new-custom-id');
+            if (customIdEl) customIdEl.value = paddedId;
         }
 
         async function fetchCatalog() {
@@ -758,7 +759,6 @@
 
             grid.innerHTML = itemsToRender.map((gown) => {
                 const itemId = gown.id;
-                // Safely read stored total price from Supabase
                 let storedPrice = parseFloat(gown.price) || 0;
                 let images = Array.isArray(gown.images) ? gown.images : [];
 
@@ -817,6 +817,7 @@
             const list = document.getElementById('staged-items-list');
             const countSpan = document.getElementById('staged-count');
 
+            if (!countSpan || !wrapper || !list) return;
             countSpan.textContent = stagedItems.length;
 
             if (stagedItems.length === 0) {
@@ -852,7 +853,6 @@
 
             try {
                 for (const item of stagedItems) {
-                    // Automatically pre-compute total PHP amount and push to exact database column schema
                     const finalComputedPrice = calculatePhpPrice(item.price, item.markup);
                     
                     const payload = {
@@ -976,21 +976,33 @@
             }
         };
 
+        // FIXED: Robust Login Form Handler allowing both Admin and Guest sign-ins correctly
         document.getElementById('admin-auth-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const username = document.getElementById('admin-user-input').value.trim();
-            const password = document.getElementById('admin-pass-input').value.trim();
+            const usernameInput = document.getElementById('admin-user-input');
+            const passwordInput = document.getElementById('admin-pass-input');
+            const loginModal = document.getElementById('admin-login-modal');
+            const adminPanel = document.getElementById('admin-panel-catalog');
+            const bodyRoot = document.getElementById('body-root');
+            const welcomeMsg = document.getElementById('nav-welcome-message');
+
+            if (!usernameInput || !passwordInput || !loginModal) return;
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            loginModal.style.display = 'none';
 
             if (username === ADMIN_NAME && password === ADMIN_CODE) {
-                document.getElementById('admin-panel-catalog').classList.add('active');
-                document.getElementById('body-root').classList.add('admin-mode');
-                document.getElementById('admin-login-modal').style.display = 'none';
-                document.getElementById('nav-welcome-message').textContent = `Welcome, Admin!`;
+                if (adminPanel) adminPanel.classList.add('active');
+                if (bodyRoot) bodyRoot.classList.add('admin-mode');
+                if (welcomeMsg) welcomeMsg.textContent = `Welcome, Admin!`;
                 renderStagedList();
                 generateNextItemCode();
             } else {
-                document.getElementById('admin-login-modal').style.display = 'none';
-                document.getElementById('nav-welcome-message').textContent = `Welcome, ${username}!`;
+                if (adminPanel) adminPanel.classList.remove('active');
+                if (bodyRoot) bodyRoot.classList.remove('admin-mode');
+                if (welcomeMsg) welcomeMsg.textContent = `Welcome, ${username}!`;
             }
         });
 
