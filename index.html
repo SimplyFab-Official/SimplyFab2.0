@@ -525,7 +525,7 @@
         <!-- Admin Panel for Adding Items & Syncing -->
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>⚙️ Admin Console & Data Migration</h3>
-            <button type="button" class="btn-sync" onclick="migrateLocalToSupabase()">🔄 Migrate Firebase Items to Supabase Now</button>
+            <button type="button" class="btn-sync" onclick="migrateLocalToSupabase()">🔄 Push Default Catalog Items to Supabase Now</button>
             
             <h3 style="margin-top: 20px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item</h3>
             <form id="add-gown-form">
@@ -578,6 +578,42 @@
         const ADMIN_MARKUP = 700;
         const ADMIN_NAME = "SimplyFab";
 
+        const defaultGowns = [
+            {
+                id: "ITEM-0001",
+                name: "The Aria Ballgown",
+                desc: "Elegant princess-cut ballgown with crystal embellishments.",
+                price_vnd: 720000,
+                images: [
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
+                ]
+            },
+            {
+                id: "ITEM-0002",
+                name: "Velvet Evening Silhouette",
+                desc: "Sleek, form-fitting evening dress designed for gala events.",
+                price_vnd: 600000,
+                images: [
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80"
+                ]
+            },
+            {
+                id: "ITEM-0003",
+                name: "Royal Lace Modern Terno",
+                desc: "Traditional yet modern filipiniana aesthetic for formal occasions.",
+                price_vnd: 920000,
+                images: [
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
+                ]
+            }
+        ];
+
         let liveGownsCatalog = [];
 
         function calculatePhpPrice(vnd) {
@@ -614,15 +650,8 @@
                 liveGownsCatalog = data;
                 renderCatalog();
             } else {
-                const localBackup = localStorage.getItem('sf_local_catalog_backup');
-                if (localBackup) {
-                    try {
-                        liveGownsCatalog = JSON.parse(localBackup);
-                        renderCatalog();
-                    } catch(e) {}
-                } else {
-                    renderCatalog();
-                }
+                liveGownsCatalog = defaultGowns;
+                renderCatalog();
             }
         }
 
@@ -631,7 +660,7 @@
             if (!grid) return;
 
             if (liveGownsCatalog.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog yet. Click the Admin Console at the top right to Migrate items or Add new dresses.</p>`;
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog yet.</p>`;
                 return;
             }
 
@@ -675,25 +704,11 @@
         }
 
         window.migrateLocalToSupabase = async function() {
-            const localBackup = localStorage.getItem('sf_local_catalog_backup');
-            if (!localBackup) {
-                alert("No local items found in backup to migrate.");
-                return;
-            }
-
             try {
-                const items = JSON.parse(localBackup);
-                for (const item of items) {
-                    const cleanItem = {
-                        id: item.id,
-                        name: item.name,
-                        desc: item.desc || "",
-                        price_vnd: parseFloat(item.price_vnd || item.priceVnd || 500000),
-                        images: item.images || []
-                    };
-                    await supabaseClient.from('gowns_catalog').upsert(cleanItem);
+                for (const item of defaultGowns) {
+                    await supabaseClient.from('gowns_catalog').upsert(item);
                 }
-                alert("Successfully migrated all items to Supabase!");
+                alert("Successfully pushed default items to Supabase!");
                 fetchCatalog();
             } catch (err) {
                 alert("Migration error: " + err.message);
