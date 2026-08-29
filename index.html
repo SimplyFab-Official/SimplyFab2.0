@@ -698,15 +698,17 @@
             let maxNum = 0;
 
             liveGownsCatalog.forEach(item => {
-                if (item.id && item.id.startsWith("SF")) {
-                    let num = parseInt(item.id.replace("SF", ""), 10);
+                let codeStr = item.id || item.name || "";
+                if (codeStr.startsWith("SF")) {
+                    let num = parseInt(codeStr.replace("SF", ""), 10);
                     if (!isNaN(num) && num > maxNum) maxNum = num;
                 }
             });
 
             stagedItems.forEach(item => {
-                if (item.id && item.id.startsWith("SF")) {
-                    let num = parseInt(item.id.replace("SF", ""), 10);
+                let codeStr = item.id || "";
+                if (codeStr.startsWith("SF")) {
+                    let num = parseInt(codeStr.replace("SF", ""), 10);
                     if (!isNaN(num) && num > maxNum) maxNum = num;
                 }
             });
@@ -738,13 +740,18 @@
             generateNextItemCode();
         }
 
+        // FIXED: Robust search filter checking both id and name columns
         function filterCatalog() {
             const query = document.getElementById('search-input').value.trim().toLowerCase();
             if (!query) {
                 renderCatalog(liveGownsCatalog);
                 return;
             }
-            const filtered = liveGownsCatalog.filter(gown => gown.id.toLowerCase().includes(query));
+            const filtered = liveGownsCatalog.filter(gown => {
+                const itemId = (gown.id || "").toLowerCase();
+                const itemName = (gown.name || "").toLowerCase();
+                return itemId.includes(query) || itemName.includes(query);
+            });
             renderCatalog(filtered);
         }
 
@@ -758,7 +765,7 @@
             }
 
             grid.innerHTML = itemsToRender.map((gown) => {
-                const itemId = gown.id;
+                const itemId = gown.id || gown.name || "SF0000";
                 let vndValue = parseFloat(gown.price_vnd) || 0;
                 let markupVal = 700; // default markup
                 let userPhpPrice = calculatePhpPrice(vndValue, markupVal);
@@ -816,204 +823,4 @@
 
         function renderStagedList() {
             const wrapper = document.getElementById('staged-wrapper');
-            const list = document.getElementById('staged-items-list');
-            const countSpan = document.getElementById('staged-count');
-
-            if (!countSpan || !wrapper || !list) return;
-            countSpan.textContent = stagedItems.length;
-
-            if (stagedItems.length === 0) {
-                wrapper.style.display = 'none';
-                list.innerHTML = '';
-                return;
-            }
-
-            wrapper.style.display = 'block';
-            list.innerHTML = stagedItems.map((item, index) => {
-                let computedTotal = calculatePhpPrice(item.price_vnd, item.markup_peso);
-                return `
-                    <div class="staged-item-row">
-                        <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | ₫${item.price_vnd.toLocaleString()} + ₱${item.markup_peso} = <strong>₱${computedTotal.toFixed(2)}</strong> [${item.images.length} photos]</span>
-                        <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        window.removeStagedItem = function(index) {
-            stagedItems.splice(index, 1);
-            localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
-            renderStagedList();
-            generateNextItemCode();
-        };
-
-        window.publishStagedItems = async function() {
-            if (stagedItems.length === 0) {
-                alert("No staged items to publish yet!");
-                return;
-            }
-
-            try {
-                for (const item of stagedItems) {
-                    const payload = {
-                        id: item.id,
-                        name: item.id,
-                        desc: item.desc,
-                        price_vnd: item.price_vnd,
-                        images: item.images
-                    };
-
-                    const { error } = await supabaseClient
-                        .from('gowns_catalog')
-                        .upsert(payload);
-
-                    if (error) {
-                        throw new Error(error.message);
-                    }
-                }
-
-                alert("🚀 All staged items successfully published and synced to Supabase!");
-                stagedItems = [];
-                localStorage.removeItem('simplyfab_staged_items');
-                renderStagedList();
-                await fetchCatalog();
-            } catch (err) {
-                alert("Publishing error: " + err.message);
-            }
-        };
-
-        async function convertFilesToBasePath(fileList) {
-            const promises = Array.from(fileList).map(file => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = e => resolve(e.target.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
-            });
-            return await Promise.all(promises);
-        }
-
-        document.getElementById('add-gown-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('new-custom-id').value;
-            const desc = document.getElementById('new-desc').value;
-            const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
-            const markup_peso = parseFloat(document.getElementById('new-markup-peso').value) || 700;
-            const fileInput = document.getElementById('new-imgs');
-            
-            if (fileInput.files.length < 3) {
-                alert("Please select at least 3 pictures.");
-                return;
-            }
-
-            try {
-                const images = await convertFilesToBasePath(fileInput.files);
-                const newItem = { id, desc, price_vnd, markup_peso, images };
-
-                stagedItems.push(newItem);
-                localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
-
-                alert(`Item ${id} added to staged list below! Click 'Publish to Catalog' when you are ready.`);
-                e.target.reset();
-                document.getElementById('new-markup-peso').value = "700";
-                document.getElementById('calc-preview').textContent = "PHP Total: ₱0.00";
-                renderStagedList();
-                generateNextItemCode();
-            } catch (err) {
-                alert("Error processing image files: " + err.message);
-            }
-        });
-
-        window.saveInlineItem = async function(id) {
-            const descInput = document.getElementById(`desc-input-${id}`);
-            const priceInput = document.getElementById(`vnd-input-${id}`);
-            const desc = descInput ? descInput.value : '';
-            const price_vnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
-            const fileInput = document.getElementById(`img-input-${id}`);
-
-            let updatePayload = { desc, price_vnd, name: id };
-
-            try {
-                if (fileInput && fileInput.files.length > 0) {
-                    if (fileInput.files.length < 3) {
-                        alert("Please select at least 3 replacement pictures.");
-                        return;
-                    }
-                    const newImages = await convertFilesToBasePath(fileInput.files);
-                    updatePayload.images = newImages;
-                }
-
-                const { error } = await supabaseClient
-                    .from('gowns_catalog')
-                    .update(updatePayload)
-                    .eq('id', id);
-
-                if (error) {
-                    alert("Error updating item: " + error.message);
-                } else {
-                    alert("Item updated and synced successfully!");
-                    fetchCatalog();
-                }
-            } catch (err) {
-                alert("Error processing replacement images: " + err.message);
-            }
-        };
-
-        window.deleteGown = async function(id) {
-            if (!confirm(`Delete item ${id}?`)) return;
-
-            const { error } = await supabaseClient
-                .from('gowns_catalog')
-                .delete()
-                .eq('id', id);
-
-            if (error) {
-                alert("Error deleting item: " + error.message);
-            } else {
-                liveGownsCatalog = liveGownsCatalog.filter(gown => gown.id !== id);
-                renderCatalog(liveGownsCatalog);
-                generateNextItemCode();
-            }
-        };
-
-        document.getElementById('admin-auth-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const usernameInput = document.getElementById('admin-user-input');
-            const passwordInput = document.getElementById('admin-pass-input');
-            const loginModal = document.getElementById('admin-login-modal');
-            const adminPanel = document.getElementById('admin-panel-catalog');
-            const bodyRoot = document.getElementById('body-root');
-            const welcomeMsg = document.getElementById('nav-welcome-message');
-
-            if (!usernameInput || !passwordInput || !loginModal) return;
-
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value.trim();
-
-            loginModal.style.display = 'none';
-
-            if (username === ADMIN_NAME && password === ADMIN_CODE) {
-                if (adminPanel) adminPanel.classList.add('active');
-                if (bodyRoot) bodyRoot.classList.add('admin-mode');
-                if (welcomeMsg) welcomeMsg.textContent = `Welcome, Admin!`;
-                renderStagedList();
-                generateNextItemCode();
-            } else {
-                if (adminPanel) adminPanel.classList.remove('active');
-                if (bodyRoot) bodyRoot.classList.remove('admin-mode');
-                if (welcomeMsg) welcomeMsg.textContent = `Welcome, ${username}!`;
-            }
-        });
-
-        supabaseClient
-            .channel('public:gowns_catalog')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'gowns_catalog' }, () => {
-                fetchCatalog();
-            })
-            .subscribe();
-
-        fetchCatalog();
-    </script>
-</body>
-</html>
+            const list = document.getElementById('
