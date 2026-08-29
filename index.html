@@ -970,7 +970,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, setDoc, onSnapshot, deleteDoc, doc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, setDoc, onSnapshot, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA5JeXosMT6e5xYcDTJNdPKPjKF5tRcf5Y",
@@ -989,7 +989,7 @@
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
         } catch (err) {
-            console.warn("Firebase init failed, using local memory mode.", err);
+            console.warn("Firebase init failed:", err);
             isFirestoreHealthy = false;
         }
 
@@ -1060,7 +1060,7 @@
             try {
                 localStorage.setItem('sf_local_catalog_backup', JSON.stringify(liveGownsCatalog));
             } catch (e) {
-                console.warn("Local storage quota exceeded or restricted.");
+                console.warn("Local storage error.");
             }
         }
 
@@ -1108,9 +1108,7 @@
 
         window.closeLightbox = function() {
             const lightbox = document.getElementById('image-lightbox');
-            if (lightbox) {
-                lightbox.classList.remove('active');
-            }
+            if (lightbox) lightbox.classList.remove('active');
         };
 
         window.toggleLikeItem = async function(id) {
@@ -1318,11 +1316,8 @@
             panels.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    if (isActive) {
-                        el.classList.remove('active');
-                    } else {
-                        el.classList.add('active');
-                    }
+                    if (isActive) el.classList.remove('active');
+                    else el.classList.add('active');
                 }
             });
             if (!isActive) {
@@ -1337,7 +1332,7 @@
         }
 
         window.scanAndPurgeDuplicates = async function() {
-            if (!confirm("Admin: Run aggressive duplicate and corruption scan?")) return;
+            if (!confirm("Admin: Run duplicate cleanup scan?")) return;
             
             let uniqueMap = new Map();
             let purgedCount = 0;
@@ -1368,11 +1363,10 @@
                         }
                     }
                 } catch (err) {
-                    console.warn("Remote duplicate purge warning:", err);
+                    console.warn("Purge warning:", err);
                 }
             }
-
-            alert(`Scan complete! Purged ${purgedCount} duplicate/corrupt items.`);
+            alert(`Cleaned up ${purgedCount} items.`);
         };
 
         const purgeDuplicatesBtn = document.getElementById('purge-duplicates-btn');
@@ -1439,7 +1433,6 @@
             });
             gowns = Array.from(uniqueMap.values());
 
-            // Strictly sort items ascending by Item Number (ITEM-0001, ITEM-0002, etc.)
             gowns.sort((a, b) => {
                 const idA = String(a.id || "").toUpperCase();
                 const idB = String(b.id || "").toUpperCase();
@@ -1758,13 +1751,13 @@
 
                 alert(`Dress number ${customId} successfully published and synced to Firebase!`);
 
-                // Instantly save to Firebase Firestore so visitors get it in real-time
                 if (db && isFirestoreHealthy) {
                     try {
                         const gownRef = doc(db, "gowns_catalog", customId);
                         await setDoc(gownRef, newGown, { merge: true });
                     } catch (e) {
-                        console.warn("Cloud sync error: ", e);
+                        console.error("Firebase write permission error:", e);
+                        alert("Error: Could not save to Firebase. Check your Firestore Security Rules.");
                     }
                 }
             }
@@ -1830,7 +1823,7 @@
                         comments: gown.comments || []
                     }, { merge: true });
                 } catch (e) {
-                    console.warn("Cloud sync update error:", e);
+                    console.error("Firebase update permission error:", e);
                 }
             }
         };
@@ -1899,7 +1892,7 @@
         }
 
         window.deleteGown = async function(id) {
-            if (confirm(`Are you sure you want to permanently delete item ${id}? This will remove it from Firebase and local cache.`)) {
+            if (confirm(`Are you sure you want to permanently delete item ${id}?`)) {
                 liveGownsCatalog = liveGownsCatalog.filter(g => String(g.id) !== String(id));
                 persistLocalCatalog();
                 renderCatalog();
@@ -1909,31 +1902,18 @@
                     try {
                         await deleteDoc(doc(db, "gowns_catalog", String(id)));
                     } catch (e) {
-                        console.warn("Cloud delete warning: ", e);
+                        console.error("Firebase delete error:", e);
                     }
                 }
             }
         };
 
         async function initRealtimeCatalog() {
-            // Paint instantly from local storage
             renderCatalog();
 
-            if (!db || !isFirestoreHealthy) {
-                return;
-            }
+            if (!db || !isFirestoreHealthy) return;
 
-            // Sync default items to cloud if missing
-            for (const defaultGown of defaultGowns) {
-                try {
-                    const ref = doc(db, "gowns_catalog", defaultGown.id);
-                    await setDoc(ref, defaultGown, { merge: true });
-                } catch (err) {
-                    console.warn("Initialization sync notice:", err);
-                }
-            }
-
-            // Real-time listener: visitors and users automatically receive all updates instantly
+            // Live synchronization feed from Firestore collection
             onSnapshot(collection(db, "gowns_catalog"), (snapshot) => {
                 let remoteGownsMap = new Map();
                 snapshot.forEach((docSnap) => {
@@ -1957,9 +1937,7 @@
                     renderCatalog();
                 }
             }, (error) => {
-                console.warn("Firestore snapshot offline mode active.", error);
-                isFirestoreHealthy = false;
-                renderCatalog();
+                console.warn("Firestore snapshot listener error:", error);
             });
         }
 
