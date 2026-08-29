@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
+    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -157,22 +158,6 @@
             color: var(--primary);
         }
 
-        .admin-toggle-btn {
-            background: #eee;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #555;
-            display: inline-block;
-        }
-
-        .admin-toggle-btn:hover {
-            background: #ddd;
-        }
-
         .hero {
             background: linear-gradient(rgba(181, 131, 141, 0.75), rgba(181, 131, 141, 0.75)), url('https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
             color: var(--white);
@@ -202,11 +187,6 @@
             font-size: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             transition: background 0.2s, color 0.2s;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--accent);
-            color: #333;
         }
 
         .container {
@@ -255,6 +235,26 @@
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;
             gap: 15px;
             align-items: flex-end;
+        }
+
+        .staged-list-container {
+            margin-top: 20px;
+            background: #fdf6f6;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px dashed var(--primary);
+        }
+
+        .staged-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         .catalog-grid {
@@ -325,3 +325,608 @@
         }
 
         .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            cursor: zoom-in;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 50%;
+            font-size: 18px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .carousel-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .carousel-btn.prev { left: 10px; }
+        .carousel-btn.next { right: 10px; }
+
+        .card-body {
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .card-body p {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .price {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .admin-price-box {
+            display: none;
+            background: #fdf6f6;
+            border: 1px dashed var(--primary);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .admin-mode .admin-price-box {
+            display: block;
+        }
+
+        .admin-price-box label {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 2px;
+            margin-top: 6px;
+        }
+
+        .admin-price-input-group {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .admin-price-input-group input {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .btn-save-inline-price {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-delete-item {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .admin-mode .btn-delete-item {
+            display: flex;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .btn-add-item {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            height: 42px;
+        }
+
+        .btn-publish {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(40,167,69,0.2);
+        }
+
+        .btn-publish:hover {
+            background-color: #218838;
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 60px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body id="body-root">
+
+    <!-- Lightbox Modal -->
+    <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" alt="">
+    </div>
+
+    <!-- Visitor Login Modal (Disguised Admin Gate) -->
+    <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
+        <div class="modal-card">
+            <h2>✨ SimplyFab Dress Catalogue</h2>
+            <p>Please enter your Name and Phone Number to view our exclusive collection.</p>
+            <form id="admin-auth-form">
+                <div class="form-group">
+                    <label for="admin-user-input">Your Name:</label>
+                    <input type="text" id="admin-user-input" class="form-control" placeholder="e.g. Maria Santos" required>
+                </div>
+                <div class="form-group">
+                    <label for="admin-pass-input">Phone Number:</label>
+                    <input type="text" id="admin-pass-input" class="form-control" placeholder="e.g. 09123456789" required>
+                </div>
+                <button type="submit" class="btn-submit" style="background-color: var(--primary);">View Catalogue</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Messenger Floating Bubble -->
+    <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
+
+    <nav>
+        <a href="#" class="nav-brand">
+            ✨ SimplyFab Dress Catalogue
+            <span class="nav-welcome-tag" id="nav-welcome-message">Welcome, Guest!</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#catalog">Dress Collection</a></li>
+        </ul>
+    </nav>
+
+    <section id="home" class="hero">
+        <h1>Look Stunning. Feel Beautiful.</h1>
+        <p>Explore our exclusive dress collection and view prices instantly.</p>
+        <a href="#catalog" class="btn-primary" style="background: white; color: var(--primary);">Explore Collection</a>
+    </section>
+
+    <div id="catalog" class="container">
+        <div class="section-header-flex">
+            <h2 class="section-title">Featured Dress Collection</h2>
+        </div>
+
+        <!-- Admin Panel for Staging Items & Publishing (Hidden for regular visitors) -->
+        <div id="admin-panel-catalog" class="admin-panel">
+            <h3>⚙️ Admin Management Console</h3>
+            <button type="button" class="btn-publish" onclick="publishStagedItems()">🚀 Publish to Catalog (<span id="staged-count">0</span> items ready)</button>
+            
+            <h3 style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item (Staged Locally)</h3>
+            <form id="add-gown-form">
+                <div class="admin-form-grid">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-custom-id">Item ID Number:</label>
+                        <input type="text" id="new-custom-id" class="form-control" placeholder="ITEM-0001" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; display:none;">
+                        <input type="hidden" id="new-name" value="Dress">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
+                        <label for="new-desc">Description:</label>
+                        <input type="text" id="new-desc" class="form-control" placeholder="Short description" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-price-vnd">Price VND (₫):</label>
+                        <input type="number" id="new-price-vnd" class="form-control" placeholder="720000" step="1" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-imgs">Pictures (3+):</label>
+                        <input type="file" id="new-imgs" class="form-control" accept="image/*" multiple required style="padding: 4px;">
+                    </div>
+                    <button type="submit" class="btn-add-item">+ Add Item</button>
+                </div>
+            </form>
+
+            <!-- Staged Drafts List Below -->
+            <div class="staged-list-container" id="staged-wrapper" style="display:none;">
+                <h4 style="margin: 0 0 10px 0; color: var(--primary);">Staged Items (Waiting to Publish):</h4>
+                <div id="staged-items-list"></div>
+            </div>
+        </div>
+
+        <!-- Catalog Grid View (Overview seen by users upon login/entry) -->
+        <div class="catalog-grid" id="catalog-grid">
+            <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
+        </div>
+    </div>
+
+    <footer>
+        <p><strong>SimplyFab Dress Catalogue</strong></p>
+        <p>Email: tin23_angela@gmail.com | Phone: 09954836767</p>
+        <p style="margin-top: 15px; font-size: 11px; color: #aaa;">&copy; 2026 SimplyFab Dress Catalogue. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const SUPABASE_URL = "https://bxqdecdhfjhnuqmstmra.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_fnwDfvYJSTV-2H2tClAtow_NLwXSoL7";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const VND_TO_PHP_RATIO = 2 / 800;
+        const ADMIN_MARKUP = 700;
+        const ADMIN_NAME = "SimplyFab";
+        const ADMIN_CODE = "021910";
+
+        const defaultGowns = [
+            {
+                id: "ITEM-0001",
+                name: "Dress",
+                desc: "Elegant princess-cut ballgown with crystal embellishments.",
+                price_vnd: 720000,
+                images: [
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80"
+                ]
+            },
+            {
+                id: "ITEM-0002",
+                name: "Dress",
+                desc: "Sleek, form-fitting evening dress designed for gala events.",
+                price_vnd: 600000,
+                images: [
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80"
+                ]
+            },
+            {
+                id: "ITEM-0003",
+                name: "Dress",
+                desc: "Traditional yet modern filipiniana aesthetic for formal occasions.",
+                price_vnd: 920000,
+                images: [
+                    "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1594552072238-b8a3da72ae9a?auto=format&fit=crop&w=600&q=80"
+                ]
+            }
+        ];
+
+        let liveGownsCatalog = [];
+        let stagedItems = JSON.parse(localStorage.getItem('simplyfab_staged_items')) || [];
+
+        function calculatePhpPrice(vnd) {
+            const baseVnd = parseFloat(vnd) || 0;
+            return (baseVnd * VND_TO_PHP_RATIO) + ADMIN_MARKUP;
+        }
+
+        window.openLightbox = function(imgSrc) {
+            if (!imgSrc) return;
+            document.getElementById('lightbox-img').src = imgSrc;
+            document.getElementById('image-lightbox').classList.add('active');
+        };
+
+        window.closeLightbox = function() {
+            document.getElementById('image-lightbox').classList.remove('active');
+        };
+
+        window.scrollCarousel = function(itemId, direction) {
+            const track = document.getElementById(`track-${itemId}`);
+            if (!track) return;
+            const slideWidth = track.clientWidth;
+            track.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
+        };
+
+        async function fetchCatalog() {
+            const { data, error } = await supabaseClient
+                .from('gowns_catalog')
+                .select('*')
+                .order('id', { ascending: true });
+            
+            if (error) {
+                console.error("Error fetching Supabase data:", error);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                liveGownsCatalog = data;
+                renderCatalog();
+            } else {
+                liveGownsCatalog = defaultGowns;
+                renderCatalog();
+            }
+        }
+
+        function renderCatalog() {
+            const grid = document.getElementById('catalog-grid');
+            if (!grid) return;
+
+            if (liveGownsCatalog.length === 0) {
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777;">No dresses available in the catalog yet.</p>`;
+                return;
+            }
+
+            grid.innerHTML = liveGownsCatalog.map((gown) => {
+                const itemId = gown.id;
+                let vndValue = parseFloat(gown.price_vnd || gown.priceVnd) || 0;
+                let userPhpPrice = calculatePhpPrice(vndValue);
+                let images = Array.isArray(gown.images) ? gown.images : [];
+
+                let slidesHtml = images.map(imgUrl => `
+                    <div class="carousel-slide">
+                        <img src="${imgUrl}" alt="${itemId}" onclick="openLightbox('${imgUrl}')" title="Click to zoom">
+                    </div>
+                `).join('');
+
+                let carouselButtons = images.length > 1 ? `
+                    <button class="carousel-btn prev" onclick="scrollCarousel('${itemId}', -1)">‹</button>
+                    <button class="carousel-btn next" onclick="scrollCarousel('${itemId}', 1)">›</button>
+                ` : '';
+
+                return `
+                    <div class="card" id="card-${itemId}">
+                        <div class="item-badge">${itemId}</div>
+                        <button class="btn-delete-item" onclick="deleteGown('${itemId}')" title="Delete item">×</button>
+                        <div class="carousel-container">
+                            <div class="carousel-track" id="track-${itemId}">
+                                ${slidesHtml}
+                            </div>
+                            ${carouselButtons}
+                        </div>
+                        <div class="card-body">
+                            <p>${gown.desc || ''}</p>
+                            <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            
+                            <div class="admin-price-box">
+                                <label>Edit VND Price (₫):</label>
+                                <div class="admin-price-input-group">
+                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}">
+                                </div>
+                                <label>Replace Pictures (3+ required if changing):</label>
+                                <div class="admin-price-input-group">
+                                    <input type="file" id="img-input-${itemId}" accept="image/*" multiple style="font-size: 11px; padding: 2px;">
+                                </div>
+                                <button class="btn-save-inline-price" onclick="saveInlineItem('${itemId}')">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderStagedList() {
+            const wrapper = document.getElementById('staged-wrapper');
+            const list = document.getElementById('staged-items-list');
+            const countSpan = document.getElementById('staged-count');
+
+            countSpan.textContent = stagedItems.length;
+
+            if (stagedItems.length === 0) {
+                wrapper.style.display = 'none';
+                list.innerHTML = '';
+                return;
+            }
+
+            wrapper.style.display = 'block';
+            list.innerHTML = stagedItems.map((item, index) => `
+                <div class="staged-item-row">
+                    <span><strong>${item.id}</strong> - ${item.desc} (₱${calculatePhpPrice(item.price_vnd).toFixed(2)}) [${item.images.length} photos]</span>
+                    <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        window.removeStagedItem = function(index) {
+            stagedItems.splice(index, 1);
+            localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
+            renderStagedList();
+        };
+
+        window.publishStagedItems = async function() {
+            if (stagedItems.length === 0) {
+                alert("No staged items to publish yet!");
+                return;
+            }
+
+            try {
+                for (const item of stagedItems) {
+                    await supabaseClient.from('gowns_catalog').upsert(item);
+                }
+                alert("🚀 All staged items successfully published and synced to Supabase!");
+                stagedItems = [];
+                localStorage.removeItem('simplyfab_staged_items');
+                renderStagedList();
+                fetchCatalog();
+            } catch (err) {
+                alert("Publishing error: " + err.message);
+            }
+        };
+
+        async function convertFilesToBasePath(fileList) {
+            const promises = Array.from(fileList).map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            });
+            return await Promise.all(promises);
+        }
+
+        document.getElementById('add-gown-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('new-custom-id').value.trim().toUpperCase();
+            const name = "Dress";
+            const desc = document.getElementById('new-desc').value;
+            const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
+            const fileInput = document.getElementById('new-imgs');
+            
+            if (fileInput.files.length < 3) {
+                alert("Please select at least 3 pictures.");
+                return;
+            }
+
+            try {
+                const images = await convertFilesToBasePath(fileInput.files);
+                const newItem = { id, name, desc, price_vnd, images };
+
+                stagedItems.push(newItem);
+                localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
+
+                alert(`Item ${id} added to staged list below! Click 'Publish to Catalog' when you are ready.`);
+                e.target.reset();
+                renderStagedList();
+            } catch (err) {
+                alert("Error processing image files: " + err.message);
+            }
+        });
+
+        window.saveInlineItem = async function(id) {
+            const priceInput = document.getElementById(`vnd-input-${id}`);
+            const price_vnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
+            const fileInput = document.getElementById(`img-input-${id}`);
+
+            let updatePayload = { price_vnd };
+
+            try {
+                if (fileInput && fileInput.files.length > 0) {
+                    if (fileInput.files.length < 3) {
+                        alert("Please select at least 3 replacement pictures.");
+                        return;
+                    }
+                    const newImages = await convertFilesToBasePath(fileInput.files);
+                    updatePayload.images = newImages;
+                }
+
+                const { error } = await supabaseClient
+                    .from('gowns_catalog')
+                    .update(updatePayload)
+                    .eq('id', id);
+
+                if (error) {
+                    alert("Error updating item: " + error.message);
+                } else {
+                    alert("Item updated and synced successfully!");
+                    fetchCatalog();
+                }
+            } catch (err) {
+                alert("Error processing replacement images: " + err.message);
+            }
+        };
+
+        window.deleteGown = async function(id) {
+            if (!confirm(`Delete item ${id}?`)) return;
+
+            const { error } = await supabaseClient
+                .from('gowns_catalog')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert("Error deleting item: " + error.message);
+            } else {
+                liveGownsCatalog = liveGownsCatalog.filter(gown => gown.id !== id);
+                renderCatalog();
+            }
+        };
+
+        document.getElementById('admin-auth-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('admin-user-input').value.trim();
+            const password = document.getElementById('admin-pass-input').value.trim();
+
+            if (username === ADMIN_NAME && password === ADMIN_CODE) {
+                document.getElementById('admin-panel-catalog').classList.add('active');
+                document.getElementById('body-root').classList.add('admin-mode');
+                document.getElementById('admin-login-modal').style.display = 'none';
+                document.getElementById('nav-welcome-message').textContent = `Welcome, Admin!`;
+                renderStagedList();
+            } else {
+                document.getElementById('admin-login-modal').style.display = 'none';
+                document.getElementById('nav-welcome-message').textContent = `Welcome, ${username}!`;
+            }
+        });
+
+        supabaseClient
+            .channel('public:gowns_catalog')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'gowns_catalog' }, () => {
+                fetchCatalog();
+            })
+            .subscribe();
+
+        fetchCatalog();
+    </script>
+</body>
+</html>
