@@ -339,15 +339,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #eaeaea;
+            background: #f3f3f3;
         }
 
         .carousel-slide img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain; /* Changed from cover to contain to prevent mobile cropping / zoom-in */
             object-position: center;
             cursor: zoom-in;
+            background-color: #f9f6f7;
         }
 
         .carousel-btn {
@@ -615,7 +616,6 @@
                             <option value="" disabled selected>Select size</option>
                             <option value="Small">Small</option>
                             <option value="Medium">Medium</option>
-                            <option value="Medium">Medium</option>
                             <option value="Small and Medium">Small and Medium</option>
                             <option value="Small, Medium and Large">Small, Medium and Large</option>
                         </select>
@@ -788,7 +788,7 @@
             grid.innerHTML = itemsToRender.map((gown) => {
                 const itemId = gown.id || gown.name || "SF0000";
                 let vndValue = parseFloat(gown.price_vnd) || 0;
-                let markupVal = gown.markup !== undefined && gown.markup !== null ? parseFloat(gown.markup) : 700;
+                let markupVal = gown.default_markup !== undefined && gown.default_markup !== null ? parseFloat(gown.default_markup) : 700;
                 let userPhpPrice = calculatePhpPrice(vndValue, markupVal);
                 let images = Array.isArray(gown.images) ? gown.images : [];
 
@@ -894,7 +894,7 @@
                         name: item.id,
                         desc: item.desc,
                         price_vnd: item.price_vnd,
-                        markup: item.markup_peso,
+                        default_markup: item.markup_peso,
                         images: item.images
                     };
 
@@ -943,8 +943,51 @@
             }
 
             try {
-                const images = await convertFilesToBasePath(fileInput.files);
-                const newItem = { id, desc, price_vnd, markup_peso, images };
+                const newImages = await convertFilesToBasePath(fileInput.files);
+
+                let duplicateFound = false;
+                let duplicateSource = "";
+
+                for (const gown of liveGownsCatalog) {
+                    if (Array.isArray(gown.images)) {
+                        for (const existingImg of gown.images) {
+                            for (const newImg of newImages) {
+                                if (existingImg === newImg) {
+                                    duplicateFound = true;
+                                    duplicateSource = `Live Item Code: ${gown.id}`;
+                                    break;
+                                }
+                            }
+                            if (duplicateFound) break;
+                        }
+                    }
+                    if (duplicateFound) break;
+                }
+
+                if (!duplicateFound) {
+                    for (const staged of stagedItems) {
+                        if (Array.isArray(staged.images)) {
+                            for (const stagedImg of staged.images) {
+                                for (const newImg of newImages) {
+                                    if (stagedImg === newImg) {
+                                        duplicateFound = true;
+                                        duplicateSource = `Staged Item Code: ${staged.id}`;
+                                        break;
+                                    }
+                                }
+                                if (duplicateFound) break;
+                            }
+                        }
+                        if (duplicateFound) break;
+                    }
+                }
+
+                if (duplicateFound) {
+                    alert(`❌ Duplicate Error: One or more selected pictures match an existing image already in the catalog or staged list (${duplicateSource}). Please use unique images.`);
+                    return;
+                }
+
+                const newItem = { id, desc, price_vnd, markup_peso, images: newImages };
 
                 stagedItems.push(newItem);
                 localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
@@ -984,6 +1027,31 @@
                         return;
                     }
                     const newImages = await convertFilesToBasePath(fileInput.files);
+
+                    let duplicateFound = false;
+                    let duplicateSource = "";
+
+                    for (const gown of liveGownsCatalog) {
+                        if (gown.id !== id && Array.isArray(gown.images)) {
+                            for (const existingImg of gown.images) {
+                                for (const newImg of newImages) {
+                                    if (existingImg === newImg) {
+                                        duplicateFound = true;
+                                        duplicateSource = `Live Item Code: ${gown.id}`;
+                                        break;
+                                    }
+                                }
+                                if (duplicateFound) break;
+                            }
+                        }
+                        if (duplicateFound) break;
+                    }
+
+                    if (duplicateFound) {
+                        alert(`❌ Duplicate Error: Replacement pictures match another item in the catalog (${duplicateSource}). Please select unique pictures.`);
+                        return;
+                    }
+
                     updatePayload.images = newImages;
                 }
 
