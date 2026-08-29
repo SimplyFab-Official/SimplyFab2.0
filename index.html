@@ -762,6 +762,20 @@
             renderCatalog(filtered);
         }
 
+        // Live calculation preview for card inline update inputs
+        window.updateInlinePreview = function(itemId) {
+            const vndInput = document.getElementById(`vnd-input-${itemId}`);
+            const markupInput = document.getElementById(`markup-input-${itemId}`);
+            const previewPriceEl = document.getElementById(`preview-price-${itemId}`);
+
+            if (vndInput && markupInput && previewPriceEl) {
+                const vndVal = vndInput.value;
+                const markupVal = markupInput.value;
+                const newTotal = calculatePhpPrice(vndVal, markupVal);
+                previewPriceEl.textContent = `₱${newTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            }
+        };
+
         function renderCatalog(itemsToRender) {
             const grid = document.getElementById('catalog-grid');
             if (!grid) return;
@@ -774,7 +788,7 @@
             grid.innerHTML = itemsToRender.map((gown) => {
                 const itemId = gown.id || gown.name || "SF0000";
                 let vndValue = parseFloat(gown.price_vnd) || 0;
-                let markupVal = parseFloat(gown.markup) || 700;
+                let markupVal = gown.markup !== undefined && gown.markup !== null ? parseFloat(gown.markup) : 700;
                 let userPhpPrice = calculatePhpPrice(vndValue, markupVal);
                 let images = Array.isArray(gown.images) ? gown.images : [];
 
@@ -802,7 +816,7 @@
                         <div class="card-body">
                             <p><strong>Size Availability:</strong> ${gown.desc || ''}</p>
                             <div class="price-details">Original Price: ₫${vndValue.toLocaleString('en-US')} (+₱${markupVal} markup)</div>
-                            <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div class="price" id="preview-price-${itemId}">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
                             <div class="admin-price-box">
                                 <label>Edit Size:</label>
@@ -816,11 +830,11 @@
                                 </div>
                                 <label>Edit VND Price (₫):</label>
                                 <div class="admin-price-input-group">
-                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}">
+                                    <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}" oninput="updateInlinePreview('${itemId}')">
                                 </div>
                                 <label>Edit Markup (₱):</label>
                                 <div class="admin-price-input-group">
-                                    <input type="number" id="markup-input-${itemId}" value="${markupVal}">
+                                    <input type="number" id="markup-input-${itemId}" value="${markupVal}" oninput="updateInlinePreview('${itemId}')">
                                 </div>
                                 <label>Replace Pictures (3+ required if changing):</label>
                                 <div class="admin-price-input-group">
@@ -946,7 +960,6 @@
             }
         });
 
-        // FIXED: Excluded primary key 'id' from update payload to prevent 400 error on update requests
         window.saveInlineItem = async function(id) {
             const descInput = document.getElementById(`desc-input-${id}`);
             const priceInput = document.getElementById(`vnd-input-${id}`);
