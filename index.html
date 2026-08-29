@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
-    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -249,7 +248,7 @@
 
         .admin-form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) auto;
             gap: 15px;
             align-items: flex-end;
         }
@@ -388,7 +387,13 @@
         .card-body p {
             color: var(--text-light);
             font-size: 14px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
+        }
+
+        .price-details {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 4px;
         }
 
         .price {
@@ -535,12 +540,10 @@
 </head>
 <body id="body-root">
 
-    <!-- Lightbox Modal -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="">
     </div>
 
-    <!-- Visitor Login Modal (Disguised Admin Gate) -->
     <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -559,7 +562,6 @@
         </div>
     </div>
 
-    <!-- Messenger Floating Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
 
     <nav>
@@ -584,27 +586,25 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
-        <!-- Search Bar for Users and Admin -->
         <div class="search-bar-container">
             <input type="text" id="search-input" placeholder="🔍 Search Item Code (e.g. SF0001)..." oninput="filterCatalog()">
         </div>
 
-        <!-- Admin Panel for Staging Items & Publishing -->
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>⚙️ Admin Management Console</h3>
             <button type="button" class="btn-publish" onclick="publishStagedItems()">🚀 Publish to Catalog (<span id="staged-count">0</span> items ready)</button>
             
-            <h3 style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item (Auto SF Item Code & Size)</h3>
+            <h3 style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px;">Add New Dress Item</h3>
             <form id="add-gown-form">
                 <div class="admin-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-custom-id">Item Code (Auto):</label>
                         <input type="text" id="new-custom-id" class="form-control" readonly style="background-color: #f1f1f1; font-weight: bold;">
                     </div>
-                    <div class="form-group" style="margin-bottom:0; grid-column: span 2;">
+                    <div class="form-group" style="margin-bottom:0;">
                         <label for="new-desc">Size Availability:</label>
                         <select id="new-desc" class="form-control" required>
-                            <option value="" disabled selected>Select size option</option>
+                            <option value="" disabled selected>Select size</option>
                             <option value="Small">Small</option>
                             <option value="Small and Medium">Small and Medium</option>
                             <option value="Small, Medium and Large">Small, Medium and Large</option>
@@ -613,7 +613,10 @@
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-price-vnd">Price VND (₫):</label>
                         <input type="number" id="new-price-vnd" class="form-control" placeholder="720000" step="1" required oninput="previewPhpCalculation()">
-                        <small style="color: var(--primary); font-size: 11px; font-weight: bold; display: block; margin-top: 4px;" id="calc-preview">PHP Total: ₱0.00</small>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="new-markup-peso">Markup (₱):</label>
+                        <input type="number" id="new-markup-peso" class="form-control" value="700" step="1" required oninput="previewPhpCalculation()">
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="new-imgs">Pictures (3+):</label>
@@ -621,6 +624,7 @@
                     </div>
                     <button type="submit" class="btn-add-item">+ Add Item</button>
                 </div>
+                <small style="color: var(--primary); font-size: 11px; font-weight: bold; display: block; margin-top: 8px;" id="calc-preview">PHP Total: ₱0.00</small>
             </form>
 
             <div class="staged-list-container" id="staged-wrapper" style="display:none;">
@@ -629,7 +633,6 @@
             </div>
         </div>
 
-        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -648,23 +651,24 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const VND_TO_PHP_RATIO = 2 / 800;
-        const ADMIN_MARKUP = 700; // Automatic markup of 700 pesos applied here
         const ADMIN_NAME = "SimplyFab";
         const ADMIN_CODE = "021910";
 
         let liveGownsCatalog = [];
         let stagedItems = JSON.parse(localStorage.getItem('simplyfab_staged_items')) || [];
 
-        function calculatePhpPrice(vnd) {
+        function calculatePhpPrice(vnd, markup) {
             const baseVnd = parseFloat(vnd) || 0;
-            return (baseVnd * VND_TO_PHP_RATIO) + ADMIN_MARKUP;
+            const markupPeso = parseFloat(markup) || 0;
+            return (baseVnd * VND_TO_PHP_RATIO) + markupPeso;
         }
 
         window.previewPhpCalculation = function() {
             const inputVal = document.getElementById('new-price-vnd').value;
+            const markupVal = document.getElementById('new-markup-peso').value;
             const previewEl = document.getElementById('calc-preview');
-            const calculated = calculatePhpPrice(inputVal);
-            previewEl.textContent = `PHP Total (Calculated + ₱700): ₱${calculated.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            const calculated = calculatePhpPrice(inputVal, markupVal);
+            previewEl.textContent = `PHP Total (Calculated + ₱${markupVal || 0}): ₱${calculated.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         };
 
         window.openLightbox = function(imgSrc) {
@@ -747,7 +751,8 @@
             grid.innerHTML = itemsToRender.map((gown) => {
                 const itemId = gown.id;
                 let vndValue = parseFloat(gown.price_vnd || gown.priceVnd) || 0;
-                let userPhpPrice = calculatePhpPrice(vndValue);
+                let markupVal = gown.markup_peso !== undefined ? parseFloat(gown.markup_peso) : 700;
+                let userPhpPrice = calculatePhpPrice(vndValue, markupVal);
                 let images = Array.isArray(gown.images) ? gown.images : [];
 
                 let slidesHtml = images.map(imgUrl => `
@@ -773,6 +778,7 @@
                         </div>
                         <div class="card-body">
                             <p><strong>Size Availability:</strong> ${gown.desc || ''}</p>
+                            <div class="price-details">Original: ₫${vndValue.toLocaleString('en-US')}</div>
                             <div class="price">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
                             <div class="admin-price-box">
@@ -787,6 +793,10 @@
                                 <label>Edit VND Price (₫):</label>
                                 <div class="admin-price-input-group">
                                     <input type="number" id="vnd-input-${itemId}" value="${Math.round(vndValue)}">
+                                </div>
+                                <label>Edit Markup (₱):</label>
+                                <div class="admin-price-input-group">
+                                    <input type="number" id="markup-input-${itemId}" value="${markupVal}">
                                 </div>
                                 <label>Replace Pictures (3+ required if changing):</label>
                                 <div class="admin-price-input-group">
@@ -816,7 +826,7 @@
             wrapper.style.display = 'block';
             list.innerHTML = stagedItems.map((item, index) => `
                 <div class="staged-item-row">
-                    <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} (₱${calculatePhpPrice(item.price_vnd).toFixed(2)}) [${item.images.length} photos]</span>
+                    <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | ₫${item.price_vnd.toLocaleString()} + ₱${item.markup_peso} = <strong>₱${calculatePhpPrice(item.price_vnd, item.markup_peso).toFixed(2)}</strong> [${item.images.length} photos]</span>
                     <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
                 </div>
             `).join('');
@@ -867,6 +877,7 @@
             const name = "Dress";
             const desc = document.getElementById('new-desc').value;
             const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
+            const markup_peso = parseFloat(document.getElementById('new-markup-peso').value) || 0;
             const fileInput = document.getElementById('new-imgs');
             
             if (fileInput.files.length < 3) {
@@ -876,13 +887,14 @@
 
             try {
                 const images = await convertFilesToBasePath(fileInput.files);
-                const newItem = { id, name, desc, price_vnd, images };
+                const newItem = { id, name, desc, price_vnd, markup_peso, images };
 
                 stagedItems.push(newItem);
                 localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
 
                 alert(`Item ${id} added to staged list below! Click 'Publish to Catalog' when you are ready.`);
                 e.target.reset();
+                document.getElementById('new-markup-peso').value = "700";
                 document.getElementById('calc-preview').textContent = "PHP Total: ₱0.00";
                 renderStagedList();
                 generateNextItemCode();
@@ -894,12 +906,14 @@
         window.saveInlineItem = async function(id) {
             const descInput = document.getElementById(`desc-input-${id}`);
             const priceInput = document.getElementById(`vnd-input-${id}`);
+            const markupInput = document.getElementById(`markup-input-${id}`);
             
             const desc = descInput ? descInput.value : '';
             const price_vnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
+            const markup_peso = markupInput ? parseFloat(markupInput.value) || 0 : 700;
             const fileInput = document.getElementById(`img-input-${id}`);
 
-            let updatePayload = { desc, price_vnd };
+            let updatePayload = { desc, price_vnd, markup_peso };
 
             try {
                 if (fileInput && fileInput.files.length > 0) {
@@ -923,7 +937,7 @@
                     fetchCatalog();
                 }
             } catch (err) {
-                alert("Error processing replacement images: " + err.number);
+                alert("Error processing replacement images: " + err.message);
             }
         };
 
