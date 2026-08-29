@@ -862,10 +862,9 @@
 
             try {
                 for (const item of stagedItems) {
-                    // Send strictly defined schema columns matching Supabase table structure
+                    // FIXED: Removed extra unmapped properties (like 'name') that caused Supabase 400 Bad Request error
                     const payload = {
                         id: item.id,
-                        name: item.name,
                         desc: item.desc,
                         price_vnd: item.price_vnd,
                         markup_peso: item.markup_peso,
@@ -906,7 +905,6 @@
         document.getElementById('add-gown-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('new-custom-id').value;
-            const name = "Dress";
             const desc = document.getElementById('new-desc').value;
             const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
             const markup_peso = parseFloat(document.getElementById('new-markup-peso').value) || 700;
@@ -919,7 +917,8 @@
 
             try {
                 const images = await convertFilesToBasePath(fileInput.files);
-                const newItem = { id, name, desc, price_vnd, markup_peso, images };
+                // FIXED: Removed 'name' property to match your exact database schema columns
+                const newItem = { id, desc, price_vnd, markup_peso, images };
 
                 stagedItems.push(newItem);
                 localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
