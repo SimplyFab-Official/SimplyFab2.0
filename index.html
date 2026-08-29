@@ -615,6 +615,7 @@
                             <option value="" disabled selected>Select size</option>
                             <option value="Small">Small</option>
                             <option value="Medium">Medium</option>
+                            <option value="Medium">Medium</option>
                             <option value="Small and Medium">Small and Medium</option>
                             <option value="Small, Medium and Large">Small, Medium and Large</option>
                         </select>
@@ -762,7 +763,6 @@
             renderCatalog(filtered);
         }
 
-        // Live calculation preview for card inline update inputs
         window.updateInlinePreview = function(itemId) {
             const vndInput = document.getElementById(`vnd-input-${itemId}`);
             const markupInput = document.getElementById(`markup-input-${itemId}`);
@@ -967,10 +967,15 @@
 
             const desc = descInput ? descInput.value : '';
             const price_vnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
-            const markup = markupInput ? parseFloat(markupInput.value) || 700 : 700;
+            const default_markup = markupInput ? parseFloat(markupInput.value) || 700 : 700;
             const fileInput = document.getElementById(`img-input-${id}`);
 
-            let updatePayload = { desc, price_vnd, markup, name: id };
+            let updatePayload = { 
+                desc: desc, 
+                price_vnd: price_vnd, 
+                default_markup: default_markup, 
+                name: id 
+            };
 
             try {
                 if (fileInput && fileInput.files.length > 0) {
