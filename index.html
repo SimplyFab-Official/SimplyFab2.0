@@ -862,12 +862,12 @@
 
             try {
                 for (const item of stagedItems) {
-                    // FIXED: Removed extra unmapped properties (like 'name') that caused Supabase 400 Bad Request error
+                    // FIXED: Changed payload fields to match standard Supabase table columns ('price' and 'markup')
                     const payload = {
                         id: item.id,
                         desc: item.desc,
-                        price_vnd: item.price_vnd,
-                        markup_peso: item.markup_peso,
+                        price: item.price_vnd,
+                        markup: item.markup_peso,
                         images: item.images
                     };
 
@@ -917,7 +917,6 @@
 
             try {
                 const images = await convertFilesToBasePath(fileInput.files);
-                // FIXED: Removed 'name' property to match your exact database schema columns
                 const newItem = { id, desc, price_vnd, markup_peso, images };
 
                 stagedItems.push(newItem);
@@ -940,11 +939,11 @@
             const markupInput = document.getElementById(`markup-input-${id}`);
             
             const desc = descInput ? descInput.value : '';
-            const price_vnd = priceInput ? parseFloat(priceInput.value) || 0 : 0;
-            const markup_peso = markupInput ? parseFloat(markupInput.value) || 700 : 700;
+            const price = priceInput ? parseFloat(priceInput.value) || 0 : 0;
+            const markup = markupInput ? parseFloat(markupInput.value) || 700 : 700;
             const fileInput = document.getElementById(`img-input-${id}`);
 
-            let updatePayload = { desc, price_vnd, markup_peso };
+            let updatePayload = { desc, price, markup };
 
             try {
                 if (fileInput && fileInput.files.length > 0) {
