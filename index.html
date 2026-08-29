@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SimplyFab Dress Catalogue</title>
+    <!-- Supabase CDN Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -545,10 +546,12 @@
 </head>
 <body id="body-root">
 
+    <!-- Lightbox Modal -->
     <div id="image-lightbox" class="image-lightbox-overlay" onclick="closeLightbox()">
         <img id="lightbox-img" src="" alt="">
     </div>
 
+    <!-- Visitor Login Modal (Disguised Admin Gate) -->
     <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -567,6 +570,7 @@
         </div>
     </div>
 
+    <!-- Messenger Floating Bubble -->
     <a href="https://www.facebook.com/messages/t/110124887067313" target="_blank" class="messenger-bubble" title="Chat with us on Messenger!">💬</a>
 
     <nav>
@@ -591,10 +595,12 @@
             <h2 class="section-title">Featured Dress Collection</h2>
         </div>
 
+        <!-- Search Bar for Users and Admin -->
         <div class="search-bar-container">
             <input type="text" id="search-input" placeholder="🔍 Search Item Code (e.g. SF0001)..." oninput="filterCatalog()">
         </div>
 
+        <!-- Admin Panel for Staging Items & Publishing -->
         <div id="admin-panel-catalog" class="admin-panel">
             <h3>Add New Dress Item</h3>
             <form id="add-gown-form">
@@ -639,6 +645,7 @@
             </div>
         </div>
 
+        <!-- Catalog Grid View -->
         <div class="catalog-grid" id="catalog-grid">
             <p style="text-align: center; color: #777; grid-column: 1/-1;">Loading catalog from Supabase...</p>
         </div>
@@ -996,7 +1003,7 @@
                 generateNextItemCode();
             } else {
                 document.getElementById('admin-login-modal').style.display = 'none';
-                document.getElementById('nav-welcome-message').textContent = `Welcome, ${username}!`;
+                document.getElementById('nav-welcome-image').textContent = `Welcome, ${username}!`;
             }
         });
 
