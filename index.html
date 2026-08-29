@@ -650,7 +650,7 @@
         <img id="lightbox-img" src="" alt="">
     </div>
 
-    <!-- Visitor Login Modal (Admin code hidden completely) -->
+    <!-- Visitor Login Modal -->
     <div id="admin-login-modal" class="modal-overlay" style="display: flex;">
         <div class="modal-card">
             <h2>✨ SimplyFab Dress Catalogue</h2>
@@ -1020,7 +1020,7 @@
             if (!grid) return;
 
             if (itemsToRender.length === 0) {
-                grid.innerHTML = `<p style="grid-icon: 1/-1; text-align: center; color: #777; grid-column: 1/-1;">No matching items found in the catalogue.</p>`;
+                grid.innerHTML = `<p style="text-align: center; color: #777; grid-column: 1/-1;">No matching items found in the catalogue.</p>`;
                 return;
             }
 
@@ -1188,16 +1188,29 @@
             }
         };
 
-        async function convertFilesToBasePath(fileList) {
-            const promises = Array.from(fileList).map(file => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = e => resolve(e.target.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
-            });
-            return await Promise.all(promises);
+        async function uploadFilesToSupabaseStorage(fileList, itemId) {
+            const uploadedUrls = [];
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${itemId}_${Date.now()}_${i}.${fileExt}`;
+                const filePath = `${fileName}`;
+
+                const { error } = await supabaseClient.storage
+                    .from('gown-images')
+                    .upload(filePath, file);
+
+                if (error) {
+                    throw new Error("Storage upload failed: " + error.message);
+                }
+
+                const { data: publicUrlData } = supabaseClient.storage
+                    .from('gown-images')
+                    .getPublicUrl(filePath);
+
+                uploadedUrls.push(publicUrlData.publicUrl);
+            }
+            return uploadedUrls;
         }
 
         document.getElementById('add-gown-form').addEventListener('submit', async (e) => {
@@ -1215,8 +1228,9 @@
             }
 
             try {
-                const newImages = await convertFilesToBasePath(fileInput.files);
-                const newItem = { id, desc, colors, price_vnd, markup_peso, images: newImages };
+                // Upload images to Supabase Storage bucket 'gown-images'
+                const imagePublicUrls = await uploadFilesToSupabaseStorage(fileInput.files, id);
+                const newItem = { id, desc, colors, price_vnd, markup_peso, images: imagePublicUrls };
 
                 stagedItems.push(newItem);
                 localStorage.setItem('simplyfab_staged_items', JSON.stringify(stagedItems));
@@ -1228,7 +1242,7 @@
                 renderStagedList();
                 generateNextItemCode();
             } catch (err) {
-                alert("Error processing image files: " + err.message);
+                alert("Error uploading image files to storage: " + err.message);
             }
         });
 
@@ -1258,8 +1272,8 @@
                         alert("Please select at least 3 replacement pictures.");
                         return;
                     }
-                    const newImages = await convertFilesToBasePath(fileInput.files);
-                    updatePayload.images = newImages;
+                    const newImageUrls = await uploadFilesToSupabaseStorage(fileInput.files, id);
+                    updatePayload.images = newImageUrls;
                 }
 
                 const { error } = await supabaseClient
@@ -1274,7 +1288,7 @@
                     fetchCatalog();
                 }
             } catch (err) {
-                alert("Error processing replacement images: " + err.message);
+                alert("Error uploading replacement images: " + err.message);
             }
         };
 
