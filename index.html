@@ -971,7 +971,7 @@
                 const { data, error } = await supabaseClient
                     .from('gowns_catalog')
                     .select('id, name, "desc", colors, price_vnd, default_markup, images')
-                    .range(0, 19);
+                    .limit(20);
             
                 if (error) {
                     console.error("Supabase fetch error:", error.message);
