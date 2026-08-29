@@ -862,6 +862,7 @@
 
             try {
                 for (const item of stagedItems) {
+                    // Send strictly defined schema columns matching Supabase table structure
                     const payload = {
                         id: item.id,
                         name: item.name,
@@ -1003,7 +1004,7 @@
                 generateNextItemCode();
             } else {
                 document.getElementById('admin-login-modal').style.display = 'none';
-                document.getElementById('nav-welcome-image').textContent = `Welcome, ${username}!`;
+                document.getElementById('nav-welcome-message').textContent = `Welcome, ${username}!`;
             }
         });
 
