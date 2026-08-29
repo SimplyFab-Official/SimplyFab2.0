@@ -489,6 +489,7 @@
             border-radius: 4px;
             font-size: 12px;
             outline: none;
+            background-color: #fff;
         }
 
         .btn-add-checklist {
@@ -851,7 +852,7 @@
             const selectedSize = sizeSelect ? sizeSelect.value : 'Standard';
             const selectedColor = colorSelect ? colorSelect.value : '';
 
-            if (!selectedColor) {
+            if (colorSelect && !selectedColor) {
                 alert("Please select a color before adding to your checklist!");
                 return;
             }
@@ -870,7 +871,7 @@
                 userChecklist.push({
                     id: itemId,
                     size: selectedSize,
-                    color: selectedColor,
+                    color: selectedColor || 'N/A',
                     price: phpPrice,
                     qty: 1
                 });
@@ -878,7 +879,7 @@
 
             localStorage.setItem('simplyfab_user_checklist', JSON.stringify(userChecklist));
             updateCartBadge();
-            alert(`✨ Added item ${itemId} (Size: ${selectedSize}, Color: ${selectedColor}) to your Purchase Checklist!`);
+            alert(`✨ Added item ${itemId} (Size: ${selectedSize}${selectedColor ? ', Color: ' + selectedColor : ''}) to your Purchase Checklist!`);
         };
 
         window.removeFromChecklist = function(index) {
@@ -906,7 +907,7 @@
 
             container.innerHTML = userChecklist.map((item, index) => `
                 <div class="cart-item-row">
-                    <span><strong>${item.id}</strong> | Size: ${item.size} | Color: ${item.color} | ₱${(item.price * item.qty).toLocaleString('en-US', {minimumFractionDigits: 2})} (x${item.qty})</span>
+                    <span><strong>${item.id}</strong> | Size: ${item.size} ${item.color && item.color !== 'N/A' ? '| Color: ' + item.color : ''} | ₱${(item.price * item.qty).toLocaleString('en-US', {minimumFractionDigits: 2})} (x${item.qty})</span>
                     <button onclick="removeFromChecklist(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
                 </div>
             `).join('');
@@ -917,7 +918,8 @@
             messageLines.push(`Customer Name: ${currentLoggedInUserName}`);
             messageLines.push(`-----------------------------------`);
             userChecklist.forEach(item => {
-                messageLines.push(`• Code: ${item.id} | Size: ${item.size} | Color: ${item.color} | Qty: ${item.qty} | ₱${(item.price * item.qty).toLocaleString('en-US', {minimumFractionDigits: 2})}`);
+                let colorText = item.color && item.color !== 'N/A' ? ` | Color: ${item.color}` : '';
+                messageLines.push(`• Code: ${item.id} | Size: ${item.size}${colorText} | Qty: ${item.qty} | ₱${(item.price * item.qty).toLocaleString('en-US', {minimumFractionDigits: 2})}`);
             });
             messageLines.push(`-----------------------------------`);
             messageLines.push(`Total Amount: ₱${totalSum.toLocaleString('en-US', {minimumFractionDigits: 2})}`);
@@ -1037,8 +1039,12 @@
                         colorsList = gown.colors;
                     }
                 }
-                
-                let colorOptionsHtml = `<option value="" disabled selected>Select Color</option>` + colorsList.map(c => `<option value="${c}">${c}</option>`).join('');
+
+                let colorDropdownHtml = '';
+                if (colorsList.length > 0) {
+                    let colorOptions = `<option value="" disabled selected>Select Color</option>` + colorsList.map(c => `<option value="${c}">${c}</option>`).join('');
+                    colorDropdownHtml = `<select id="color-select-${itemId}" title="Select Color">${colorOptions}</select>`;
+                }
 
                 let slidesHtml = images.map(imgUrl => `
                     <div class="carousel-slide">
@@ -1066,7 +1072,7 @@
                             <div class="price-details">Original Price: ₫${vndValue.toLocaleString('en-US')} (+₱${markupVal} markup)</div>
                             <div class="price" id="preview-price-${itemId}">₱${userPhpPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                             
-                            <!-- User Size, Color Dropdowns & Checklist Add Button -->
+                            <!-- User Size, Optional Color Dropdowns & Checklist Add Button -->
                             <div class="user-action-row">
                                 <select id="size-select-${itemId}" title="Select Size">
                                     <option value="Small">Small</option>
@@ -1074,9 +1080,7 @@
                                     <option value="Small and Medium">Small and Medium</option>
                                     <option value="Small, Medium and Large">Small, Medium and Large</option>
                                 </select>
-                                <select id="color-select-${itemId}" title="Select Color">
-                                    ${colorOptionsHtml}
-                                </select>
+                                ${colorDropdownHtml}
                                 <button type="button" class="btn-add-checklist" onclick="addToChecklist('${itemId}')">+ Checklist</button>
                             </div>
 
@@ -1090,7 +1094,7 @@
                                         <option value="Small, Medium and Large" ${gown.desc === 'Small, Medium and Large' ? 'selected' : ''}>Small, Medium and Large</option>
                                     </select>
                                 </div>
-                                <label>Edit Colors (comma separated):</label>
+                                <label>Edit Colors (comma separated, leave blank if none):</label>
                                 <div class="admin-price-input-group">
                                     <input type="text" id="colors-input-${itemId}" value="${Array.isArray(gown.colors) ? gown.colors.join(', ') : (gown.colors || '')}">
                                 </div>
@@ -1133,7 +1137,7 @@
                 let computedTotal = calculatePhpPrice(item.price_vnd, item.markup_peso);
                 return `
                     <div class="staged-item-row">
-                        <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | Colors: ${item.colors} | ₫${item.price_vnd.toLocaleString()} + ₱${item.markup_peso} = <strong>₱${computedTotal.toFixed(2)}</strong> [${item.images.length} photos]</span>
+                        <span><strong>Code: ${item.id}</strong> - Size: ${item.desc} | Colors: ${item.colors || 'None'} | ₫${item.price_vnd.toLocaleString()} + ₱${item.markup_peso} = <strong>₱${computedTotal.toFixed(2)}</strong> [${item.images.length} photos]</span>
                         <button type="button" onclick="removeStagedItem(${index})" style="background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
                     </div>
                 `;
@@ -1204,11 +1208,6 @@
             const price_vnd = parseFloat(document.getElementById('new-price-vnd').value) || 0;
             const markup_peso = parseFloat(document.getElementById('new-markup-peso').value) || 700;
             const fileInput = document.getElementById('new-imgs');
-
-            if (!colors) {
-                alert("Please specify the available colors.");
-                return;
-            }
             
             if (fileInput.files.length < 3) {
                 alert("Please select at least 3 pictures.");
