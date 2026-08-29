@@ -768,7 +768,9 @@
             if (error) {
                 alert("Error deleting item: " + error.message);
             } else {
-                fetchCatalog();
+                // Instantly remove from local array and re-render without delay
+                liveGownsCatalog = liveGownsCatalog.filter(gown => gown.id !== id);
+                renderCatalog();
             }
         };
 
